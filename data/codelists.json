@@ -1,0 +1,371 @@
+{
+  "ChrgBr": {
+    "name": "Charge Bearer",
+    "kind": "internal",
+    "schemaType": "ChargeBearerType1Code",
+    "note": "Who pays the transaction charges. A mismatch between what the debtor agreed and what the message says is a leading cause of unexpected deductions and repair fees.",
+    "codes": {
+      "DEBT": "Borne by debtor — all charges are paid by the sender, creditor receives the full amount",
+      "CRED": "Borne by creditor — charges are deducted from the transferred amount",
+      "SHAR": "Shared — sender pays its own bank's charges, creditor pays the rest",
+      "SLEV": "Following service level — charges follow the rules of the scheme named in Service Level (used by SEPA)"
+    }
+  },
+  "SttlmMtd": {
+    "name": "Settlement Method",
+    "kind": "internal",
+    "schemaType": "SettlementMethod1Code",
+    "note": "How the interbank leg actually settles. Determines which other elements of Settlement Information are allowed.",
+    "codes": {
+      "INDA": "Instructed agent — settled on an account the instructed agent services (nostro held by the instructing agent)",
+      "INGA": "Instructing agent — settled on an account the instructing agent services (vostro)",
+      "COVE": "Cover — settled by a separate cover payment, typically a pacs.009 COV",
+      "CLRG": "Clearing system — settled through a payment clearing or RTGS system"
+    }
+  },
+  "PmtMtd": {
+    "name": "Payment Method",
+    "kind": "internal",
+    "schemaType": "PaymentMethod3Code",
+    "note": "Set once per payment information block in pain.001. Direct debit initiation (pain.008) uses PaymentMethod2Code, where the only value is DD.",
+    "codes": {
+      "TRF": "Credit transfer",
+      "TRA": "Credit transfer governed by a specific agreement or convention",
+      "CHK": "Cheque",
+      "DD": "Direct debit (pain.008 only)"
+    }
+  },
+  "SeqTp": {
+    "name": "Sequence Type",
+    "kind": "internal",
+    "schemaType": "SequenceType3Code",
+    "note": "Where a direct debit collection sits in the life of its mandate. SEPA sequencing errors (sending RCUR before any FRST) are a common rejection cause.",
+    "codes": {
+      "FRST": "First collection under a recurring mandate",
+      "RCUR": "A subsequent recurring collection",
+      "FNAL": "The final collection under a mandate",
+      "OOFF": "One-off collection — the mandate authorises a single collection only",
+      "RPRE": "Re-presented collection, following an earlier failure"
+    }
+  },
+  "CdtDbtInd": {
+    "name": "Credit / Debit Indicator",
+    "kind": "internal",
+    "schemaType": "CreditDebitCode",
+    "note": "Direction of an amount, balance or entry. In statements, always read an amount together with this indicator — ISO 20022 amounts are unsigned.",
+    "codes": {
+      "CRDT": "Credit — money into the account",
+      "DBIT": "Debit — money out of the account"
+    }
+  },
+  "Prty": {
+    "name": "Priority",
+    "kind": "internal",
+    "schemaType": "Priority2Code",
+    "note": "A processing-order hint, not a settlement guarantee. Most schemes override or ignore it; use Service Level for anything binding.",
+    "codes": {
+      "HIGH": "High priority",
+      "NORM": "Normal priority (the default when absent)"
+    }
+  },
+  "ClrChanl": {
+    "name": "Clearing Channel",
+    "kind": "internal",
+    "schemaType": "ClearingChannel2Code",
+    "note": "Which class of clearing infrastructure should carry the payment.",
+    "codes": {
+      "RTGS": "Real-time gross settlement system",
+      "RTNS": "Real-time net settlement system",
+      "MPNS": "Mass payment net settlement system",
+      "BOOK": "Settled internally on the agent's own books, no external system"
+    }
+  },
+  "SvcLvl": {
+    "name": "Service Level",
+    "kind": "external",
+    "schemaType": "ExternalServiceLevel1Code",
+    "note": "The rulebook the payment is executed under. This is the element that binds a payment to a scheme, so it is usually the first thing a scheme's validation checks.",
+    "codes": {
+      "SEPA": "Single Euro Payments Area scheme rules",
+      "INST": "Instant — immediate 24/7 execution (SCT Inst, NPP, FedNow style)",
+      "SDVA": "Same day value",
+      "URGP": "Urgent payment",
+      "NURG": "Non-urgent payment",
+      "PRPT": "EBA priority service",
+      "BKTR": "Bank transfer, settled between the agents directly"
+    }
+  },
+  "LclInstrm": {
+    "name": "Local Instrument",
+    "kind": "external",
+    "schemaType": "ExternalLocalInstrument1Code",
+    "note": "Scheme-defined product or instrument within a service level. Unlike most codelists this one is genuinely local — the same code can mean different things in different schemes, and many schemes publish their own values in a proprietary sub-element instead. Always read it against the specific rulebook.",
+    "codes": {
+      "CORE": "SEPA core direct debit — consumer scheme, full refund rights",
+      "COR1": "SEPA core direct debit with a shortened settlement cycle (withdrawn in most markets)",
+      "B2B": "SEPA business-to-business direct debit — no refund right, debtor must be a business",
+      "INST": "Instant credit transfer instrument",
+      "RTGS": "Payment to be cleared through an RTGS system"
+    }
+  },
+  "CtgyPurp": {
+    "name": "Category Purpose",
+    "kind": "external",
+    "schemaType": "ExternalCategoryPurpose1Code",
+    "note": "Why the payment is being made, at a level the *agents* act on — it can change routing, cut-off or clearing treatment. Distinct from Purpose, which is for the creditor's benefit and should not drive processing.",
+    "codes": {
+      "CASH": "General cash management transfer",
+      "CORT": "Settlement of a trade (trade or treasury operation)",
+      "DIVI": "Dividend payment",
+      "GOVT": "Government payment",
+      "HEDG": "Hedging operation",
+      "INTC": "Intra-company payment between group entities",
+      "INTE": "Interest payment",
+      "LOAN": "Loan drawdown or repayment",
+      "PENS": "Pension payment",
+      "SALA": "Salary payment — often routed as a bulk file and may be privacy-restricted",
+      "SECU": "Securities transaction",
+      "SSBE": "Social security benefit",
+      "SUPP": "Supplier payment",
+      "TAXS": "Tax payment",
+      "TRAD": "Trade services operation",
+      "TREA": "Treasury operation",
+      "VATX": "Value added tax payment",
+      "WHLD": "Withholding tax payment"
+    }
+  },
+  "Purp": {
+    "name": "Purpose",
+    "kind": "external",
+    "schemaType": "ExternalPurpose1Code",
+    "note": "The underlying reason for the payment, carried unaltered end to end for the creditor's reconciliation. Agents must not use it for routing decisions — that is Category Purpose's job. Several hundred values exist; the common ones are below.",
+    "codes": {
+      "SALA": "Salary payment",
+      "BONU": "Bonus payment",
+      "PENS": "Pension payment",
+      "SUPP": "Supplier payment",
+      "TRAD": "Trade settlement",
+      "GDDS": "Purchase or sale of goods",
+      "SCVE": "Purchase or sale of services",
+      "TAXS": "Tax payment",
+      "VATX": "Value added tax payment",
+      "INTC": "Intra-company payment",
+      "LOAN": "Loan",
+      "LOAR": "Loan repayment",
+      "DIVD": "Dividend",
+      "INTE": "Interest",
+      "RENT": "Rent",
+      "ELEC": "Electricity bill",
+      "PHON": "Telephone bill",
+      "INSU": "Insurance premium",
+      "EDUC": "Education fees",
+      "MDCS": "Medical services",
+      "CHAR": "Charitable donation",
+      "TRPT": "Transport costs",
+      "GOVT": "Government payment",
+      "HLRP": "Housing loan repayment",
+      "CCRD": "Credit card payment",
+      "DCRD": "Debit card payment"
+    }
+  },
+  "TxSts": {
+    "name": "Transaction / Group Status",
+    "kind": "external",
+    "schemaType": "ExternalPaymentTransactionStatus1Code",
+    "note": "Reported in pain.002 and pacs.002 at group, payment-information and transaction level. The critical distinction is accepted-for-processing (ACTC/ACSP) versus actually settled (ACSC/ACCC) — treating ACSP as final is a classic reconciliation bug.",
+    "codes": {
+      "ACTC": "Accepted technical validation — syntax and schema are valid, nothing more",
+      "ACCP": "Accepted customer profile — passed profile and format checks",
+      "ACSP": "Accepted settlement in process — in the clearing flow, not yet settled",
+      "ACSC": "Accepted settlement completed at the debtor's agent — the debit has settled",
+      "ACCC": "Accepted settlement completed at the creditor's agent — funds credited",
+      "ACWC": "Accepted with change — processed, but the agent altered something (truncated or repaired data)",
+      "ACWP": "Accepted without posting — accepted, but not yet booked to the creditor account",
+      "ACFC": "Accepted funds checked — accepted and funds confirmed available",
+      "PDNG": "Pending — held awaiting something; a reason code should say what",
+      "RCVD": "Received — logged at the receiving agent, validation not started",
+      "PART": "Partially accepted — some transactions in the group accepted, others rejected",
+      "PATC": "Partially accepted technical correct — awaiting further authorisations",
+      "RJCT": "Rejected — will not be processed; a reason code is mandatory in practice",
+      "CANC": "Cancelled"
+    }
+  },
+  "StsRsn": {
+    "name": "Status Reason",
+    "kind": "external",
+    "schemaType": "ExternalStatusReason1Code",
+    "note": "Why a payment was rejected or is pending. Returned in pain.002 and pacs.002. The AC/AG/AM/BE families are worth memorising — they account for most real-world rejections.",
+    "codes": {
+      "AC01": "Incorrect account number — format or checksum invalid",
+      "AC04": "Account closed",
+      "AC06": "Account blocked for this type of transaction",
+      "AG01": "Transaction forbidden on this account type",
+      "AG02": "Invalid bank operation code",
+      "AM02": "Amount exceeds the agreed maximum for this transaction type",
+      "AM04": "Insufficient funds",
+      "AM05": "Duplicate payment",
+      "AM09": "Wrong amount — not the amount that was agreed",
+      "BE01": "Debtor or creditor name does not match the account",
+      "BE04": "Missing or invalid creditor address",
+      "BE05": "Unrecognised initiating party",
+      "DT01": "Invalid date — requested execution date is not a valid business date",
+      "FF01": "Invalid file format",
+      "MD07": "End customer is deceased",
+      "MS02": "Refused by the customer, no reason given",
+      "MS03": "Refused by the agent, no reason given",
+      "RC01": "Invalid bank identifier — BIC or clearing code unknown",
+      "RR01": "Missing debtor account or identification — regulatory requirement",
+      "RR02": "Missing debtor name or address — regulatory requirement",
+      "RR03": "Missing creditor name or address — regulatory requirement",
+      "RR04": "Other regulatory reason",
+      "SL01": "Blocked by a service level agreement or standing instruction",
+      "TM01": "Received after the cut-off time",
+      "NARR": "Reason supplied as free text in Additional Information"
+    }
+  },
+  "RtrRsn": {
+    "name": "Return Reason",
+    "kind": "external",
+    "schemaType": "ExternalReturnReason1Code",
+    "note": "Why a settled payment is being sent back via pacs.004. A return is a new payment in the opposite direction, not a cancellation — the original stays settled, which matters for reconciliation and for charges already taken.",
+    "codes": {
+      "AC01": "Incorrect account number",
+      "AC04": "Account closed",
+      "AC06": "Account blocked",
+      "AM04": "Insufficient funds",
+      "AM05": "Duplicate payment",
+      "ARDT": "Already returned — the transaction has previously been returned",
+      "BE01": "Name and account do not match",
+      "BE04": "Missing or invalid creditor address",
+      "CUST": "Requested by the customer",
+      "DUPL": "Duplicate payment",
+      "FOCR": "Following a cancellation request",
+      "FRAD": "Fraudulent original payment",
+      "MD06": "Returned by the debtor, disputing an authorised collection",
+      "RR01": "Missing regulatory debtor details",
+      "RR03": "Missing regulatory creditor details",
+      "TM01": "Received after cut-off",
+      "NARR": "Reason supplied as free text"
+    }
+  },
+  "CxlRsn": {
+    "name": "Cancellation Reason",
+    "kind": "external",
+    "schemaType": "ExternalCancellationReason1Code",
+    "note": "Why camt.056 is asking for a payment to be recalled. FRAD and TECH usually get priority handling; CUST is a best-efforts request the receiving agent may refuse.",
+    "codes": {
+      "AGNT": "Requested by an agent in the chain",
+      "AM09": "Wrong amount",
+      "COVR": "Cancellation of a cover payment",
+      "CURR": "Wrong currency",
+      "CUST": "Requested by the customer",
+      "CUTA": "Cancelled to enable a technical repair and re-send",
+      "DUPL": "Payment was a duplicate",
+      "FRAD": "Fraudulent origin",
+      "TECH": "Technical problem requiring cancellation",
+      "UPAY": "Undue payment — should not have been made"
+    }
+  },
+  "InvstgtnSts": {
+    "name": "Investigation Execution Confirmation",
+    "kind": "internal",
+    "schemaType": "InvestigationExecutionConfirmation3Code",
+    "note": "The answer camt.029 gives to a camt.056 cancellation request. Note that CNCL means the money was actually recalled, while ACVA only acknowledges the request — do not treat them as equivalent.",
+    "codes": {
+      "CNCL": "Cancelled — the payment was successfully recalled",
+      "PDCR": "Pending cancellation — accepted and in progress",
+      "RJCR": "Rejected cancellation — the agent will not recall the payment",
+      "ACVA": "Accepted valid — the request is valid and under investigation",
+      "ACNR": "Accepted, no reason for the request was provided",
+      "RJNR": "Rejected, no reason provided",
+      "MODI": "Modified as requested instead of cancelled",
+      "IPAY": "Payment had already been made before the request arrived"
+    }
+  },
+  "RvslRsn": {
+    "name": "Reversal Reason",
+    "kind": "external",
+    "schemaType": "ExternalReversalReason1Code",
+    "note": "Why an initiating party is reversing its own instruction in pain.007. Only the originator can reverse; a debtor disputing a collection goes through a return or refund instead.",
+    "codes": {
+      "AM05": "Duplicate collection",
+      "CUST": "Requested by the customer",
+      "DUPL": "Duplicate payment",
+      "FRAD": "Fraudulent",
+      "MD01": "No valid mandate exists",
+      "MD02": "Mandate details are missing or incorrect",
+      "MD06": "Disputed by the debtor as unauthorised",
+      "MS02": "Refused by the customer, no reason given",
+      "MS03": "Refused by the agent, no reason given",
+      "TECH": "Technical problem",
+      "NARR": "Reason supplied as free text"
+    }
+  },
+  "BalTp": {
+    "name": "Balance Type",
+    "kind": "external",
+    "schemaType": "ExternalBalanceType1Code",
+    "note": "Which balance a camt.052/053 figure represents. OPBD and CLBD are the booked bookends that must reconcile against the entries; CLAV is what the customer can actually spend. Confusing booked with available balance is the most common statement-parsing error.",
+    "codes": {
+      "OPBD": "Opening booked — booked balance at the start of the period",
+      "CLBD": "Closing booked — booked balance at the end of the period",
+      "PRCD": "Previously closed booked — the prior statement's closing balance",
+      "CLAV": "Closing available — funds actually available after holds and float",
+      "ITAV": "Interim available — available balance mid-period",
+      "ITBD": "Interim booked — booked balance mid-period",
+      "FWAV": "Forward available — availability on a future date",
+      "OPAV": "Opening available",
+      "XPCD": "Expected — projected balance",
+      "INFO": "Informational only"
+    }
+  },
+  "RmtLctnMtd": {
+    "name": "Remittance Location Method",
+    "kind": "internal",
+    "schemaType": "RemittanceLocationMethod2Code",
+    "note": "How remittance detail that is too large for the payment message is delivered separately — the pointer that links a payment to a remt.001.",
+    "codes": {
+      "FAXI": "Fax",
+      "EDIC": "Electronic data interchange",
+      "URID": "Uniform resource identifier — a link to the detail",
+      "EMAL": "Email",
+      "POST": "Post",
+      "SMSM": "SMS"
+    }
+  },
+  "AdrTp": {
+    "name": "Address Type",
+    "kind": "internal",
+    "schemaType": "AddressType2Code",
+    "note": "Qualifies a postal address. Relevant to the structured-address migration: schemes increasingly reject PBOX for the debtor and require a real street address.",
+    "codes": {
+      "ADDR": "Postal address",
+      "PBOX": "PO box",
+      "HOME": "Residential address",
+      "BIZZ": "Business address",
+      "MLTO": "Mail-to address",
+      "DLVY": "Delivery-to address"
+    }
+  },
+  "ClrSysId": {
+    "name": "Clearing System Identification",
+    "kind": "external",
+    "schemaType": "ExternalClearingSystemIdentification1Code",
+    "note": "Names the domestic clearing system whose member identifier appears in Member Identification. This is how a national sort code or routing number travels inside an ISO 20022 message.",
+    "codes": {
+      "AUBSB": "Australia — BSB number",
+      "USABA": "United States — ABA routing transit number",
+      "GBDSC": "United Kingdom — sort code",
+      "NZNCC": "New Zealand — national clearing code",
+      "CACPA": "Canada — CPA routing number",
+      "DEBLZ": "Germany — Bankleitzahl",
+      "ESNCC": "Spain — national clearing code",
+      "ITNCC": "Italy — national clearing code",
+      "INFSC": "India — IFSC",
+      "JPZGN": "Japan — Zengin clearing code",
+      "CNAPS": "China — CNAPS code",
+      "HKNCC": "Hong Kong — national clearing code",
+      "CHBCC": "Switzerland — BC number"
+    }
+  }
+}

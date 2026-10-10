@@ -1,0 +1,168 @@
+{
+  "CBPR+": {
+    "label": "SWIFT cross-border (CBPR+)",
+    "scope": "Cross-border correspondent banking payments over SWIFT.",
+    "caveat": "Reflects the CBPR+ usage guidelines as published. Verify against the current release before building to it — CBPR+ revises annually, and the structured-address rules in particular have moving deadlines.",
+    "pacs.008": {
+      "GrpHdr.NbOfTxs": { "usage": "restricted", "note": "Must be 1. CBPR+ permits one payment per message so a rejection can never partially fail a batch." },
+      "CdtTrfTxInf": { "usage": "restricted", "note": "Exactly one occurrence, following from NbOfTxs = 1." },
+      "CdtTrfTxInf.PmtId.UETR": { "usage": "mandatory", "note": "Optional in base ISO, mandatory here. Without it gpi tracking cannot work, which is most of the value of the migration." },
+      "CdtTrfTxInf.PmtId.InstrId": { "usage": "mandatory", "note": "Required point-to-point reference for each hop." },
+      "CdtTrfTxInf.IntrBkSttlmDt": { "usage": "mandatory", "note": "Optional in base ISO." },
+      "CdtTrfTxInf.ChrgBr": { "usage": "restricted", "allowed": ["DEBT", "CRED", "SHAR"], "note": "SLEV is excluded — it only means anything inside a scheme with its own charging rules." },
+      "CdtTrfTxInf.Dbtr.Nm": { "usage": "mandatory", "note": "Required by FATF Recommendation 16, not merely by CBPR+." },
+      "CdtTrfTxInf.Dbtr.PstlAdr": { "usage": "mandatory", "note": "A debtor address is required; the structured form is being phased in." },
+      "CdtTrfTxInf.Dbtr.PstlAdr.TwnNm": { "usage": "mandatory", "note": "Part of the minimum hybrid address: town plus country." },
+      "CdtTrfTxInf.Dbtr.PstlAdr.Ctry": { "usage": "mandatory" },
+      "CdtTrfTxInf.Dbtr.PstlAdr.AdrLine": { "usage": "forbidden", "note": "Withdrawn for debtor and creditor under the structured-address migration. Still schema-valid, so your XSD will not catch this — only the scheme validator will." },
+      "CdtTrfTxInf.Cdtr.Nm": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.PstlAdr": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.PstlAdr.TwnNm": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.PstlAdr.Ctry": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.PstlAdr.AdrLine": { "usage": "forbidden", "note": "Same withdrawal as the debtor's." },
+      "CdtTrfTxInf.DbtrAgt.FinInstnId.BICFI": { "usage": "mandatory", "note": "11-character BIC. CBPR+ is a BIC-addressed network, so clearing-system member ids alone will not route." },
+      "CdtTrfTxInf.CdtrAgt.FinInstnId.BICFI": { "usage": "mandatory" },
+      "CdtTrfTxInf.RmtInf.Ustrd": { "usage": "restricted", "note": "One occurrence only, 140 characters. The repeating cardinality in base ISO is misleading — capacity is unchanged from MT103." },
+      "CdtTrfTxInf.RmtInf": { "usage": "restricted", "note": "Structured and unstructured are mutually exclusive; you may not send both." }
+    },
+    "pacs.009": {
+      "GrpHdr.NbOfTxs": { "usage": "restricted", "note": "Must be 1." },
+      "CdtTrfTxInf.PmtId.UETR": { "usage": "mandatory" },
+      "CdtTrfTxInf.IntrBkSttlmDt": { "usage": "mandatory" },
+      "CdtTrfTxInf.Dbtr.FinInstnId.BICFI": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.FinInstnId.BICFI": { "usage": "mandatory" },
+      "CdtTrfTxInf.UndrlygCstmrCdtTrf.Dbtr.Nm": { "usage": "mandatory", "note": "In the COV variant, the underlying parties must be named — the whole purpose is to let the receiving agent screen them." },
+      "CdtTrfTxInf.UndrlygCstmrCdtTrf.Cdtr.Nm": { "usage": "mandatory" }
+    },
+    "pacs.002": {
+      "TxInfAndSts.OrgnlUETR": { "usage": "mandatory", "note": "The matching key. Without it a status cannot be tied to a tracked payment." },
+      "TxInfAndSts.TxSts": { "usage": "mandatory" },
+      "TxInfAndSts.StsRsnInf.Rsn.Cd": { "usage": "mandatory", "note": "Required whenever the status is RJCT. A rejection with no code is the complaint CBPR+ exists to prevent." }
+    },
+    "pacs.004": {
+      "TxInf.OrgnlUETR": { "usage": "mandatory" },
+      "TxInf.RtrRsnInf.Rsn.Cd": { "usage": "mandatory", "note": "A return must say why." },
+      "TxInf.RtrdIntrBkSttlmAmt": { "usage": "mandatory" }
+    },
+    "camt.056": {
+      "Undrlyg.TxInf.OrgnlUETR": { "usage": "mandatory", "note": "Mandatory so a recall can be actioned several hops downstream without a manual search." },
+      "Undrlyg.TxInf.CxlRsnInf.Rsn.Cd": { "usage": "mandatory" },
+      "Case.Id": { "usage": "mandatory", "note": "Threads the whole stop-and-recall exchange together." }
+    },
+    "head.001": {
+      "Fr.FIId.FinInstnId.BICFI": { "usage": "mandatory", "note": "Must be the 11-character form." },
+      "To.FIId.FinInstnId.BICFI": { "usage": "mandatory" },
+      "BizSvc": { "usage": "mandatory", "note": "Identifies the CBPR+ service, e.g. swift.cbprplus.02. Gateways validate on it before any business check runs." }
+    }
+  },
+
+  "SEPA": {
+    "label": "Single Euro Payments Area",
+    "scope": "Euro credit transfers (SCT), instant transfers (SCT Inst) and direct debits (SDD) within the SEPA area.",
+    "caveat": "Follows the EPC rulebooks and their implementation guidelines. SEPA is the most tightly constrained of the schemes here — many base-ISO elements are simply not permitted.",
+    "pain.001": {
+      "PmtInf.PmtTpInf.SvcLvl.Cd": { "usage": "mandatory", "allowed": ["SEPA", "INST"], "note": "SEPA for standard credit transfers, INST for SCT Inst. The element that makes it a SEPA payment at all." },
+      "PmtInf.ChrgBr": { "usage": "restricted", "allowed": ["SLEV"], "note": "Only SLEV. Charges follow the rulebook, so the sender does not get to choose — one of the scheme's founding principles." },
+      "PmtInf.CdtTrfTxInf.Amt.InstdAmt": { "usage": "restricted", "note": "EUR only. A SEPA payment in another currency is a contradiction." },
+      "PmtInf.CdtTrfTxInf.Amt.EqvtAmt": { "usage": "forbidden", "note": "No FX in SEPA, so there is nothing for an equivalent amount to express." },
+      "PmtInf.CdtTrfTxInf.XchgRateInf": { "usage": "forbidden", "note": "Same reason." },
+      "PmtInf.DbtrAcct.Id.IBAN": { "usage": "mandatory", "note": "SEPA is IBAN-only." },
+      "PmtInf.DbtrAcct.Id.Othr": { "usage": "forbidden" },
+      "PmtInf.CdtTrfTxInf.CdtrAcct.Id.IBAN": { "usage": "mandatory" },
+      "PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr": { "usage": "forbidden" },
+      "PmtInf.CdtTrfTxInf.Cdtr.Nm": { "usage": "restricted", "note": "70 characters, not the 140 the base schema allows. Names are silently truncated by some banks and rejected by others." },
+      "PmtInf.CdtTrfTxInf.RmtInf.Ustrd": { "usage": "restricted", "note": "One occurrence, 140 characters." },
+      "PmtInf.CdtTrfTxInf.IntrmyAgt1": { "usage": "forbidden", "note": "No intermediaries in SEPA — reachability is universal within the scheme, so routing cannot be specified." },
+      "PmtInf.CdtTrfTxInf.ChrgBr": { "usage": "forbidden", "note": "Charge bearer is set once at batch level. Setting it per transaction is rejected." }
+    },
+    "pacs.008": {
+      "CdtTrfTxInf.PmtTpInf.SvcLvl.Cd": { "usage": "mandatory", "allowed": ["SEPA", "INST"] },
+      "CdtTrfTxInf.ChrgBr": { "usage": "restricted", "allowed": ["SLEV"] },
+      "CdtTrfTxInf.DbtrAcct.Id.IBAN": { "usage": "mandatory" },
+      "CdtTrfTxInf.DbtrAcct.Id.Othr": { "usage": "forbidden" },
+      "CdtTrfTxInf.CdtrAcct.Id.IBAN": { "usage": "mandatory" },
+      "CdtTrfTxInf.CdtrAcct.Id.Othr": { "usage": "forbidden" },
+      "CdtTrfTxInf.IntrBkSttlmAmt": { "usage": "restricted", "note": "EUR only." },
+      "CdtTrfTxInf.RmtInf.Ustrd": { "usage": "restricted", "note": "One occurrence, 140 characters." },
+      "CdtTrfTxInf.ChrgsInf": { "usage": "forbidden", "note": "No deductions from the principal are permitted, so there is nothing to itemise. The beneficiary always receives the full amount." },
+      "CdtTrfTxInf.IntrmyAgt1": { "usage": "forbidden" }
+    },
+    "pain.008": {
+      "PmtInf.PmtTpInf.SvcLvl.Cd": { "usage": "mandatory", "allowed": ["SEPA"] },
+      "PmtInf.PmtTpInf.LclInstrm.Cd": { "usage": "mandatory", "allowed": ["CORE", "B2B"], "note": "Mandatory and consequential: CORE gives the debtor an 8-week no-questions refund right, B2B gives none but requires the debtor to be a business that has confirmed the mandate with its own bank." },
+      "PmtInf.PmtTpInf.SeqTp": { "usage": "mandatory", "note": "Mandatory, and must be consistent with the mandate's collection history." },
+      "PmtInf.CdtrSchmeId": { "usage": "mandatory", "note": "Your SEPA Creditor Identifier. Collections without it cannot be made." },
+      "PmtInf.ChrgBr": { "usage": "restricted", "allowed": ["SLEV"] },
+      "PmtInf.CdtrAcct.Id.IBAN": { "usage": "mandatory" },
+      "PmtInf.DrctDbtTxInf.DbtrAcct.Id.IBAN": { "usage": "mandatory" },
+      "PmtInf.DrctDbtTxInf.InstdAmt": { "usage": "restricted", "note": "EUR only." },
+      "PmtInf.DrctDbtTxInf.DrctDbtTx.MndtRltdInf.MndtId": { "usage": "mandatory" },
+      "PmtInf.DrctDbtTxInf.DrctDbtTx.MndtRltdInf.DtOfSgntr": { "usage": "mandatory", "note": "Mandates lapse after 36 months without a collection, and this is the date that proves it." },
+      "PmtInf.ReqdColltnDt": { "usage": "restricted", "note": "Must respect the rulebook's lead time ahead of submission. The required gap differs between CORE and B2B, so the same file can pass for one instrument and fail for the other." }
+    },
+    "pacs.003": {
+      "DrctDbtTxInf.PmtTpInf.SvcLvl.Cd": { "usage": "mandatory", "allowed": ["SEPA"] },
+      "DrctDbtTxInf.PmtTpInf.LclInstrm.Cd": { "usage": "mandatory", "allowed": ["CORE", "B2B"] },
+      "DrctDbtTxInf.PmtTpInf.SeqTp": { "usage": "mandatory" },
+      "DrctDbtTxInf.DrctDbtTx.CdtrSchmeId": { "usage": "mandatory" },
+      "DrctDbtTxInf.DrctDbtTx.MndtRltdInf.MndtId": { "usage": "mandatory" },
+      "DrctDbtTxInf.ChrgBr": { "usage": "restricted", "allowed": ["SLEV"] },
+      "DrctDbtTxInf.DbtrAcct.Id.IBAN": { "usage": "mandatory" }
+    }
+  },
+
+  "NPP": {
+    "label": "New Payments Platform (Australia)",
+    "scope": "Australian domestic real-time account-to-account payments.",
+    "caveat": "Based on the NPP message usage guidelines. Confirm current limits — NPP's remittance allowance and overlay-service rules have changed across releases.",
+    "pacs.008": {
+      "CdtTrfTxInf.PmtTpInf.SvcLvl.Cd": { "usage": "restricted", "allowed": ["INST"], "note": "NPP settles in near real time, around the clock." },
+      "CdtTrfTxInf.DbtrAcct.Id.IBAN": { "usage": "forbidden", "note": "Australia has no IBAN. Accounts are identified by BSB plus account number in the Other structure — a hard break for any system that assumes IBAN." },
+      "CdtTrfTxInf.DbtrAcct.Id.Othr.Id": { "usage": "mandatory", "note": "BSB and account number. Whether they are concatenated or split across elements is a per-institution decision, so check the guide." },
+      "CdtTrfTxInf.CdtrAcct.Id.IBAN": { "usage": "forbidden" },
+      "CdtTrfTxInf.CdtrAcct.Id.Othr.Id": { "usage": "mandatory" },
+      "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.ClrSysId.Cd": { "usage": "restricted", "allowed": ["AUBSB"], "note": "Routing is by BSB, not BIC — the reverse of CBPR+." },
+      "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId": { "usage": "mandatory", "note": "The 6-digit BSB." },
+      "CdtTrfTxInf.IntrBkSttlmDt": { "usage": "mandatory", "note": "Always the current date — NPP settles immediately, so a future date has no meaning." },
+      "CdtTrfTxInf.IntrBkSttlmAmt": { "usage": "restricted", "note": "AUD only." },
+      "CdtTrfTxInf.RmtInf.Ustrd": { "usage": "restricted", "note": "NPP allows a substantially longer unstructured remittance than CBPR+ or SEPA, which was a headline benefit of the platform. Confirm the current character limit in the usage guidelines rather than assuming 140." },
+      "CdtTrfTxInf.PmtId.EndToEndId": { "usage": "mandatory" },
+      "CdtTrfTxInf.IntrmyAgt1": { "usage": "forbidden", "note": "Direct reachability between participants; no correspondent chain exists." },
+      "CdtTrfTxInf.ChrgsInf": { "usage": "forbidden", "note": "No deductions from the principal." }
+    },
+    "pacs.002": {
+      "TxInfAndSts.TxSts": { "usage": "mandatory", "note": "Required within seconds. An instant-payment scheme without a prompt status report is not instant — the payer is left not knowing." },
+      "TxInfAndSts.StsRsnInf.Rsn.Cd": { "usage": "mandatory", "note": "Required on rejection." },
+      "TxInfAndSts.AccptncDtTm": { "usage": "mandatory", "note": "The timestamp shown to the customer as the moment the payment went through." }
+    }
+  },
+
+  "Fedwire": {
+    "label": "Fedwire Funds Service (United States)",
+    "scope": "US domestic high-value real-time gross settlement.",
+    "caveat": "Reflects the Fedwire Funds Service ISO 20022 implementation. The Federal Reserve publishes its own message specifications; check them for current field-level requirements.",
+    "pacs.008": {
+      "GrpHdr.NbOfTxs": { "usage": "restricted", "note": "One payment per message — Fedwire is a single-transaction RTGS system." },
+      "GrpHdr.SttlmInf.SttlmMtd": { "usage": "restricted", "allowed": ["CLRG"], "note": "Settlement is always through the clearing system, never across a correspondent account." },
+      "CdtTrfTxInf.PmtId.UETR": { "usage": "mandatory" },
+      "CdtTrfTxInf.DbtrAcct.Id.IBAN": { "usage": "forbidden", "note": "The United States has no IBAN." },
+      "CdtTrfTxInf.CdtrAcct.Id.IBAN": { "usage": "forbidden" },
+      "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.ClrSysId.Cd": { "usage": "restricted", "allowed": ["USABA"], "note": "The 9-digit ABA routing number is the primary identifier for domestic Fedwire participants." },
+      "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId": { "usage": "mandatory" },
+      "CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId": { "usage": "mandatory" },
+      "CdtTrfTxInf.IntrBkSttlmAmt": { "usage": "restricted", "note": "USD only." },
+      "CdtTrfTxInf.IntrBkSttlmDt": { "usage": "mandatory", "note": "Same-day. Fedwire settles with finality on receipt." },
+      "CdtTrfTxInf.Dbtr.Nm": { "usage": "mandatory" },
+      "CdtTrfTxInf.Dbtr.PstlAdr": { "usage": "mandatory", "note": "Structured address required under the US travel-rule implementation." },
+      "CdtTrfTxInf.Dbtr.PstlAdr.Ctry": { "usage": "mandatory" },
+      "CdtTrfTxInf.Cdtr.Nm": { "usage": "mandatory" },
+      "CdtTrfTxInf.ChrgBr": { "usage": "restricted", "allowed": ["DEBT", "SHAR"], "note": "Deducting from the principal is not the domestic norm." }
+    },
+    "pacs.009": {
+      "GrpHdr.SttlmInf.SttlmMtd": { "usage": "restricted", "allowed": ["CLRG"] },
+      "CdtTrfTxInf.PmtId.UETR": { "usage": "mandatory" },
+      "CdtTrfTxInf.IntrBkSttlmAmt": { "usage": "restricted", "note": "USD only." },
+      "CdtTrfTxInf.IntrBkSttlmDt": { "usage": "mandatory" }
+    }
+  }
+}

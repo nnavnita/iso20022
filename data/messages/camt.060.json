@@ -1,0 +1,235 @@
+{
+  "id": "camt.060.001.05",
+  "short": "camt.060",
+  "name": "AccountReportingRequest",
+  "domain": "camt",
+  "label": "Account Reporting Request",
+  "direction": "customer → bank",
+  "mtEquivalent": [
+    "MT920"
+  ],
+  "related": [
+    "camt.052",
+    "camt.053",
+    "camt.054"
+  ],
+  "summary": "Asks the bank to send an account report or statement. The pull half of cash reporting, where camt.052 and camt.053 are the push.",
+  "whenUsed": "On-demand balance checks, re-requesting a statement that never arrived, or backfilling a gap found in the sequence numbers. Replaces MT920. Also used to set up or amend a standing reporting subscription, depending on the bank's offering.",
+  "gotchas": [
+    "ReqdMsgNmId is what selects the reply type — camt.052.001.08 for an intraday report, camt.053.001.08 for a statement. Asking for the wrong one is the usual reason a request 'returns nothing useful'.",
+    "Banks commonly restrict how far back you can request and how often you may ask. Re-requesting a two-month-old statement in a retry loop will be throttled or refused.",
+    "The response arrives as a separate message with its own identifiers, and there is no status message in between. If nothing comes back you have no error to inspect — build a timeout, not a wait."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgSndr",
+      "name": "Message Sender",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Who is asking, where that differs from the account owner."
+    },
+    {
+      "path": "RptgReq",
+      "name": "Reporting Request",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per account and report type requested."
+    },
+    {
+      "path": "RptgReq.Id",
+      "name": "Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your reference for this request."
+    },
+    {
+      "path": "RptgReq.ReqdMsgNmId",
+      "name": "Requested Message Name Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Which message you want back, e.g. camt.053.001.08. Mandatory, and the single most important element here."
+    },
+    {
+      "path": "RptgReq.Acct",
+      "name": "Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Which account. Omitting it asks for every account you are entitled to see, which some banks refuse."
+    },
+    {
+      "path": "RptgReq.Acct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RptgReq.Acct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "RptgReq.Acct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RptgReq.Acct.Ccy",
+      "name": "Account Currency",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Needed to pick one currency of a multi-currency account."
+    },
+    {
+      "path": "RptgReq.AcctOwnr",
+      "name": "Account Owner",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Mandatory. The bank uses it to check entitlement."
+    },
+    {
+      "path": "RptgReq.AcctSvcr",
+      "name": "Account Servicer",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "RptgReq.RptgPrd",
+      "name": "Reporting Period",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The window you want covered. Omit for 'as at now'."
+    },
+    {
+      "path": "RptgReq.RptgPrd.FrToDt",
+      "name": "From To Date",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RptgReq.RptgPrd.FrToTm",
+      "name": "From To Time",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Time-of-day bounds, which matter for intraday reports."
+    },
+    {
+      "path": "RptgReq.RptgPrd.Tp",
+      "name": "Type",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Whether the period is interpreted against booking date or value date — the same window gives different entries either way."
+    },
+    {
+      "path": "RptgReq.RptgSeq",
+      "name": "Reporting Sequence",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Request by statement sequence number instead of by date. The right tool for filling a detected gap."
+    },
+    {
+      "path": "RptgReq.ReqdTxTp",
+      "name": "Requested Transaction Type",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Filter by entry status, credit/debit, or floor amount — ask for only what you need."
+    },
+    {
+      "path": "RptgReq.ReqdTxTp.FlrLmt",
+      "name": "Floor Limit",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3,
+      "note": "Suppress entries below a threshold. The MT field 34F position — note that in ISO the limit lives in the request, so the report no longer records what threshold produced it."
+    },
+    {
+      "path": "RptgReq.ReqdBalTp",
+      "name": "Requested Balance Type",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3,
+      "note": "Restrict which balance types come back."
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:camt.060.001.05\">",
+    "  <AcctRptgReq>",
+    "    <GrpHdr>",
+    "      <MsgId>THORN-REQ-20261011-01</MsgId>",
+    "      <CreDtTm>2026-10-11T07:05:00+11:00</CreDtTm>",
+    "    </GrpHdr>",
+    "    <RptgReq>",
+    "      <Id>REQ-0001</Id>",
+    "      <ReqdMsgNmId>camt.053.001.08</ReqdMsgNmId>",
+    "      <Acct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>083004123456789</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "        <Ccy>AUD</Ccy>",
+    "      </Acct>",
+    "      <AcctOwnr>",
+    "        <Pty>",
+    "          <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "        </Pty>",
+    "      </AcctOwnr>",
+    "      <RptgPrd>",
+    "        <FrToDt>",
+    "          <FrDt>2026-10-09</FrDt>",
+    "          <ToDt>2026-10-09</ToDt>",
+    "        </FrToDt>",
+    "        <Tp>ALLL</Tp>",
+    "      </RptgPrd>",
+    "    </RptgReq>",
+    "  </AcctRptgReq>",
+    "</Document>"
+  ]
+}

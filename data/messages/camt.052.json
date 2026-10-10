@@ -1,0 +1,472 @@
+{
+  "id": "camt.052.001.08",
+  "short": "camt.052",
+  "name": "BankToCustomerAccountReport",
+  "domain": "camt",
+  "label": "Bank To Customer Account Report",
+  "direction": "bank → customer",
+  "mtEquivalent": [
+    "MT941",
+    "MT942"
+  ],
+  "related": [
+    "camt.053",
+    "camt.054",
+    "camt.060"
+  ],
+  "summary": "An intraday view of an account: current balances and the activity so far today, including items that have not yet been booked.",
+  "whenUsed": "Intraday liquidity management and cash positioning — delivered on a schedule (hourly, or several times a day) or pulled on demand with a camt.060. Replaces MT941 (balance report) and MT942 (interim transaction report).",
+  "gotchas": [
+    "This is not a statement and carries no finality. Entries can be PDNG now and change or vanish before the camt.053 arrives. Reconciling your ledger against a camt.052 will produce breaks that resolve themselves, wasting the time of whoever investigates them.",
+    "Because it is structurally almost identical to camt.053, it is easy to feed both into the same parser and lose track of which is authoritative. Key your storage on the message type, not just the account and date.",
+    "Balance types are what distinguish the two messages' meaning: expect ITBD and ITAV (interim) here, versus OPBD and CLBD (booked bookends) in a statement."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1,
+      "note": "The as-at time of the report. Central here in a way it is not in a statement — two camt.052s for the same day differ only by this."
+    },
+    {
+      "path": "GrpHdr.MsgRcpt",
+      "name": "Message Recipient",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.MsgPgntn",
+      "name": "Message Pagination",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Rpt",
+      "name": "Report",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per account. Called Report rather than Statement — the naming difference is the standard signalling that this is not final."
+    },
+    {
+      "path": "Rpt.Id",
+      "name": "Report Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.ElctrncSeqNb",
+      "name": "Electronic Sequence Number",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.FrToDt",
+      "name": "From To Date",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Typically start of day to the as-at time."
+    },
+    {
+      "path": "Rpt.CpyDplctInd",
+      "name": "Copy Duplicate Indicator",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3
+    },
+    {
+      "path": "Rpt.Acct",
+      "name": "Account",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Acct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Acct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Acct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Acct.Ccy",
+      "name": "Account Currency",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Acct.Ownr",
+      "name": "Account Owner",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.Acct.Svcr",
+      "name": "Account Servicer",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.Bal",
+      "name": "Balance",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Optional here, unlike in a statement — a pure transaction report can carry none. A balance-only report (the MT941 case) carries these and no entries."
+    },
+    {
+      "path": "Rpt.Bal.Tp",
+      "name": "Balance Type",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Bal.Tp.CdOrPrtry",
+      "name": "Code Or Proprietary",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Bal.Tp.CdOrPrtry.Cd",
+      "name": "Balance Type Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "BalTp",
+      "tier": 1,
+      "note": "ITBD and ITAV are the intraday pair. ITAV is the number a treasurer actually funds against."
+    },
+    {
+      "path": "Rpt.Bal.Amt",
+      "name": "Balance Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Bal.CdtDbtInd",
+      "name": "Credit Debit Indicator",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "CdtDbtInd",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Bal.Dt",
+      "name": "Balance Date",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.TxsSummry",
+      "name": "Transactions Summary",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.TxsSummry.TtlCdtNtries",
+      "name": "Total Credit Entries",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Count and sum of credits in the period — the MT field 90C position. Check it against your own parse."
+    },
+    {
+      "path": "Rpt.TxsSummry.TtlDbtNtries",
+      "name": "Total Debit Entries",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Count and sum of debits — the MT field 90D position."
+    },
+    {
+      "path": "Rpt.Ntry",
+      "name": "Entry",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Activity so far. Can include pending items."
+    },
+    {
+      "path": "Rpt.Ntry.Amt",
+      "name": "Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.CdtDbtInd",
+      "name": "Credit Debit Indicator",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "CdtDbtInd",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.RvslInd",
+      "name": "Reversal Indicator",
+      "card": "[0..1]",
+      "type": "indicator",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.Ntry.Sts",
+      "name": "Status",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The element that matters most in this message. PDNG means provisional — it may still disappear."
+    },
+    {
+      "path": "Rpt.Ntry.BookgDt",
+      "name": "Booking Date",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Absent on pending entries, because they have not been booked."
+    },
+    {
+      "path": "Rpt.Ntry.ValDt",
+      "name": "Value Date",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.AcctSvcrRef",
+      "name": "Account Servicer Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Carry it forward — it is how you match today's pending entry to tomorrow's booked one in the camt.053."
+    },
+    {
+      "path": "Rpt.Ntry.BkTxCd",
+      "name": "Bank Transaction Code",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.BkTxCd.Domn",
+      "name": "Domain",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.BkTxCd.Domn.Cd",
+      "name": "Domain Code",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls",
+      "name": "Entry Details",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls",
+      "name": "Transaction Details",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.Refs",
+      "name": "References",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.Refs.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.Refs.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.Amt",
+      "name": "Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.RltdPties",
+      "name": "Related Parties",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.RltdPties.Dbtr",
+      "name": "Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.RltdPties.Cdtr",
+      "name": "Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.RmtInf",
+      "name": "Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.NtryDtls.TxDtls.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Rpt.Ntry.AddtlNtryInf",
+      "name": "Additional Entry Information",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Rpt.AddtlRptInf",
+      "name": "Additional Report Information",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:camt.052.001.08\">",
+    "  <BkToCstmrAcctRpt>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKA-RPT-20261010-1400</MsgId>",
+    "      <CreDtTm>2026-10-10T14:00:00+11:00</CreDtTm>",
+    "    </GrpHdr>",
+    "    <Rpt>",
+    "      <Id>RPT-083004123456789-20261010-1400</Id>",
+    "      <CreDtTm>2026-10-10T14:00:00+11:00</CreDtTm>",
+    "      <Acct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>083004123456789</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "        <Ccy>AUD</Ccy>",
+    "      </Acct>",
+    "      <Bal>",
+    "        <Tp>",
+    "          <CdOrPrtry>",
+    "            <Cd>ITBD</Cd>",
+    "          </CdOrPrtry>",
+    "        </Tp>",
+    "        <Amt Ccy=\"AUD\">26430.55</Amt>",
+    "        <CdtDbtInd>CRDT</CdtDbtInd>",
+    "        <Dt>",
+    "          <DtTm>2026-10-10T14:00:00+11:00</DtTm>",
+    "        </Dt>",
+    "      </Bal>",
+    "      <Bal>",
+    "        <Tp>",
+    "          <CdOrPrtry>",
+    "            <Cd>ITAV</Cd>",
+    "          </CdOrPrtry>",
+    "        </Tp>",
+    "        <Amt Ccy=\"AUD\">24930.55</Amt>",
+    "        <CdtDbtInd>CRDT</CdtDbtInd>",
+    "        <Dt>",
+    "          <DtTm>2026-10-10T14:00:00+11:00</DtTm>",
+    "        </Dt>",
+    "      </Bal>",
+    "      <Ntry>",
+    "        <Amt Ccy=\"AUD\">1500.00</Amt>",
+    "        <CdtDbtInd>DBIT</CdtDbtInd>",
+    "        <Sts>",
+    "          <Cd>PDNG</Cd>",
+    "        </Sts>",
+    "        <ValDt>",
+    "          <Dt>2026-10-10</Dt>",
+    "        </ValDt>",
+    "        <AcctSvcrRef>BNKA0000881377</AcctSvcrRef>",
+    "        <BkTxCd>",
+    "          <Domn>",
+    "            <Cd>PMNT</Cd>",
+    "            <Fmly>",
+    "              <Cd>ICDT</Cd>",
+    "              <SubFmlyCd>DMCT</SubFmlyCd>",
+    "            </Fmly>",
+    "          </Domn>",
+    "        </BkTxCd>",
+    "        <AddtlNtryInf>Awaiting authorisation</AddtlNtryInf>",
+    "      </Ntry>",
+    "    </Rpt>",
+    "  </BkToCstmrAcctRpt>",
+    "</Document>"
+  ]
+}

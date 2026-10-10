@@ -1,0 +1,1025 @@
+{
+  "MT103": {
+    "name": "Single Customer Credit Transfer",
+    "mx": "pacs.008",
+    "note": "The highest-volume migration in the industry. One MT103 becomes one pacs.008, but the party fields fan out from single tags into structured name, address and account elements — which is why address data quality dominates MT103 migration projects.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Sender's Reference",
+        "mx": "GrpHdr.MsgId",
+        "note": "Also commonly mapped to CdtTrfTxInf.PmtId.InstrId, since MT had one reference where MX has several."
+      },
+      {
+        "mt": "13C",
+        "mtName": "Time Indication",
+        "mx": "CdtTrfTxInf.SttlmTmIndctn",
+        "note": "MT packed a code and a time into one tag; MX gives each timestamp its own element."
+      },
+      {
+        "mt": "23B",
+        "mtName": "Bank Operation Code",
+        "mx": null,
+        "note": "No MX counterpart. CRED was implied by the message type itself, so the information is redundant in ISO 20022."
+      },
+      {
+        "mt": "23E",
+        "mtName": "Instruction Code",
+        "mx": "CdtTrfTxInf.InstrForCdtrAgt",
+        "note": "Routes to InstrForNxtAgt instead when the instruction was aimed at an intermediary."
+      },
+      {
+        "mt": "26T",
+        "mtName": "Transaction Type Code",
+        "mx": "CdtTrfTxInf.Purp.Prtry",
+        "note": "A domestic proprietary code. Only maps to Purp.Cd if it happens to be an ISO external purpose value."
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Interbank Settled Amount",
+        "mx": "CdtTrfTxInf.IntrBkSttlmDt + IntrBkSttlmAmt",
+        "note": "One MT tag, three pieces of MX data. The currency becomes an attribute of the amount."
+      },
+      {
+        "mt": "33B",
+        "mtName": "Currency / Instructed Amount",
+        "mx": "CdtTrfTxInf.InstdAmt"
+      },
+      {
+        "mt": "36",
+        "mtName": "Exchange Rate",
+        "mx": "CdtTrfTxInf.XchgRate"
+      },
+      {
+        "mt": "50a",
+        "mtName": "Ordering Customer",
+        "mx": "CdtTrfTxInf.Dbtr + CdtTrfTxInf.DbtrAcct",
+        "note": "The hardest field in the migration. The option letter decided whether you got an account, a BIC or four lines of free text; MX wants a structured name, a structured address and a typed account identifier. Parsing legacy free-text addresses into StrtNm/TwnNm/Ctry is the bulk of the work."
+      },
+      {
+        "mt": "51A",
+        "mtName": "Sending Institution",
+        "mx": "head.001 Fr",
+        "note": "Moves out of the payload and into the business application header."
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution",
+        "mx": "CdtTrfTxInf.DbtrAgt"
+      },
+      {
+        "mt": "53a",
+        "mtName": "Sender's Correspondent",
+        "mx": "GrpHdr.SttlmInf.InstgRmbrsmntAgt",
+        "note": "Maps to SttlmAcct instead where the tag carried an account rather than an institution — the MT option letter is what disambiguates, and it is easy to lose."
+      },
+      {
+        "mt": "54a",
+        "mtName": "Receiver's Correspondent",
+        "mx": "GrpHdr.SttlmInf.InstdRmbrsmntAgt"
+      },
+      {
+        "mt": "55a",
+        "mtName": "Third Reimbursement Institution",
+        "mx": "GrpHdr.SttlmInf.ThrdRmbrsmntAgt"
+      },
+      {
+        "mt": "56a",
+        "mtName": "Intermediary Institution",
+        "mx": "CdtTrfTxInf.IntrmyAgt1"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Account With Institution",
+        "mx": "CdtTrfTxInf.CdtrAgt",
+        "note": "A rename that misleads: 'account with institution' is simply the creditor's bank."
+      },
+      {
+        "mt": "59a",
+        "mtName": "Beneficiary Customer",
+        "mx": "CdtTrfTxInf.Cdtr + CdtTrfTxInf.CdtrAcct",
+        "note": "Same structural fan-out as field 50a."
+      },
+      {
+        "mt": "70",
+        "mtName": "Remittance Information",
+        "mx": "CdtTrfTxInf.RmtInf.Ustrd",
+        "note": "MT allowed 4 lines of 35 characters, so 140 total. MX allows 140 per occurrence — but CBPR+ permits only one occurrence, so the capacity is unchanged despite appearances."
+      },
+      {
+        "mt": "71A",
+        "mtName": "Details of Charges",
+        "mx": "CdtTrfTxInf.ChrgBr",
+        "note": "BEN maps to CRED, OUR to DEBT, SHA to SHAR. Not symmetric in reverse: SLEV has no MT equivalent at all."
+      },
+      {
+        "mt": "71F",
+        "mtName": "Sender's Charges",
+        "mx": "CdtTrfTxInf.ChrgsInf",
+        "note": "MT had separate repeatable tags for sender's and receiver's charges; MX merges them into one repeating block where each entry names its charging agent."
+      },
+      {
+        "mt": "71G",
+        "mtName": "Receiver's Charges",
+        "mx": "CdtTrfTxInf.ChrgsInf"
+      },
+      {
+        "mt": "72",
+        "mtName": "Sender to Receiver Information",
+        "mx": "CdtTrfTxInf.InstrForNxtAgt",
+        "note": "In practice field 72 was a dumping ground of coded and uncoded text. Much of its real content belongs in properly typed MX elements, so a literal mapping preserves the mess."
+      },
+      {
+        "mt": "77B",
+        "mtName": "Regulatory Reporting",
+        "mx": "CdtTrfTxInf.RgltryRptg"
+      },
+      {
+        "mt": "121",
+        "mtName": "UETR (header block 3)",
+        "mx": "CdtTrfTxInf.PmtId.UETR",
+        "note": "Lived in the network header in MT; a first-class payload element in MX."
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "CdtTrfTxInf.RmtInf.Strd",
+        "note": "Structured remittance information is MX-only. Nothing in MT103 can carry invoice-level detail."
+      }
+    ]
+  },
+  "MT101": {
+    "name": "Request for Transfer",
+    "mx": "pain.001",
+    "note": "Customer-to-bank initiation. MT101's flat repeating sequences become pain.001's three-level nesting, which is a genuine gain — shared batch data stops being repeated per payment.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Sender's Reference",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "28D",
+        "mtName": "Message Index / Total",
+        "mx": null,
+        "note": "MT101 split large files across messages with a manual index. pain.001 has no equivalent — you send one document, or several independent ones."
+      },
+      {
+        "mt": "50a",
+        "mtName": "Instructing Party",
+        "mx": "GrpHdr.InitgPty"
+      },
+      {
+        "mt": "50a",
+        "mtName": "Ordering Customer",
+        "mx": "PmtInf.Dbtr + PmtInf.DbtrAcct",
+        "note": "MT101 reused tag 50a for two different roles, distinguished only by position. A real source of mapping bugs."
+      },
+      {
+        "mt": "52a",
+        "mtName": "Account Servicing Institution",
+        "mx": "PmtInf.DbtrAgt"
+      },
+      {
+        "mt": "30",
+        "mtName": "Requested Execution Date",
+        "mx": "PmtInf.ReqdExctnDt"
+      },
+      {
+        "mt": "25",
+        "mtName": "Authorisation",
+        "mx": null,
+        "note": "No MX element. Authorisation moved out of the message into channel-level entitlements."
+      },
+      {
+        "mt": "21",
+        "mtName": "Transaction Reference",
+        "mx": "PmtInf.CdtTrfTxInf.PmtId.InstrId"
+      },
+      {
+        "mt": "21F",
+        "mtName": "F/X Deal Reference",
+        "mx": "PmtInf.CdtTrfTxInf.XchgRateInf.CtrctId"
+      },
+      {
+        "mt": "32B",
+        "mtName": "Currency / Transaction Amount",
+        "mx": "PmtInf.CdtTrfTxInf.Amt.InstdAmt"
+      },
+      {
+        "mt": "36",
+        "mtName": "Exchange Rate",
+        "mx": "PmtInf.CdtTrfTxInf.XchgRateInf.XchgRate"
+      },
+      {
+        "mt": "56a",
+        "mtName": "Intermediary",
+        "mx": "PmtInf.CdtTrfTxInf.IntrmyAgt1"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Account With Institution",
+        "mx": "PmtInf.CdtTrfTxInf.CdtrAgt"
+      },
+      {
+        "mt": "59a",
+        "mtName": "Beneficiary",
+        "mx": "PmtInf.CdtTrfTxInf.Cdtr + CdtrAcct"
+      },
+      {
+        "mt": "70",
+        "mtName": "Remittance Information",
+        "mx": "PmtInf.CdtTrfTxInf.RmtInf.Ustrd"
+      },
+      {
+        "mt": "71A",
+        "mtName": "Details of Charges",
+        "mx": "PmtInf.ChrgBr",
+        "note": "Moves up to batch level in MX, though it can still be set per transaction."
+      },
+      {
+        "mt": "25A",
+        "mtName": "Charges Account",
+        "mx": "PmtInf.ChrgsAcct"
+      },
+      {
+        "mt": "77B",
+        "mtName": "Regulatory Reporting",
+        "mx": "PmtInf.CdtTrfTxInf.RgltryRptg"
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "PmtInf.BtchBookg",
+        "note": "MX-only, and consequential: it decides whether the debtor's statement shows one lump debit or one entry per payment."
+      }
+    ]
+  },
+  "MT202": {
+    "name": "General Financial Institution Transfer",
+    "mx": "pacs.009",
+    "note": "Bank-to-bank, no customer. A clean mapping because both messages carry institutions rather than parties.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId + CdtTrfTxInf.PmtId.InstrId"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "CdtTrfTxInf.PmtId.EndToEndId"
+      },
+      {
+        "mt": "13C",
+        "mtName": "Time Indication",
+        "mx": "CdtTrfTxInf.SttlmTmIndctn"
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Amount",
+        "mx": "CdtTrfTxInf.IntrBkSttlmDt + IntrBkSttlmAmt"
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution",
+        "mx": "CdtTrfTxInf.Dbtr",
+        "note": "Becomes the Debtor, which is a financial institution in this message — not a party with a name and address."
+      },
+      {
+        "mt": "53a",
+        "mtName": "Sender's Correspondent",
+        "mx": "GrpHdr.SttlmInf.InstgRmbrsmntAgt"
+      },
+      {
+        "mt": "54a",
+        "mtName": "Receiver's Correspondent",
+        "mx": "GrpHdr.SttlmInf.InstdRmbrsmntAgt"
+      },
+      {
+        "mt": "56a",
+        "mtName": "Intermediary",
+        "mx": "CdtTrfTxInf.IntrmyAgt1"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Account With Institution",
+        "mx": "CdtTrfTxInf.CdtrAgt"
+      },
+      {
+        "mt": "58a",
+        "mtName": "Beneficiary Institution",
+        "mx": "CdtTrfTxInf.Cdtr"
+      },
+      {
+        "mt": "72",
+        "mtName": "Sender to Receiver Information",
+        "mx": "CdtTrfTxInf.InstrForNxtAgt"
+      }
+    ]
+  },
+  "MT202COV": {
+    "name": "General FI Transfer (Cover)",
+    "mx": "pacs.009 COV",
+    "note": "Same mapping as MT202 for sequence A, plus sequence B — the underlying customer credit transfer details — landing in UndrlygCstmrCdtTrf. The variant exists so the receiving agent can sanctions-screen the real parties behind a bank-to-bank cover payment.",
+    "fields": [
+      {
+        "mt": "Seq A (all)",
+        "mtName": "Cover payment details",
+        "mx": "GrpHdr + CdtTrfTxInf",
+        "note": "Identical to MT202."
+      },
+      {
+        "mt": "50a",
+        "mtName": "Ordering Customer (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Dbtr"
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.DbtrAgt"
+      },
+      {
+        "mt": "56a",
+        "mtName": "Intermediary (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.IntrmyAgt1"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Account With Institution (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.CdtrAgt"
+      },
+      {
+        "mt": "59a",
+        "mtName": "Beneficiary Customer (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Cdtr + CdtrAcct"
+      },
+      {
+        "mt": "33B",
+        "mtName": "Currency / Instructed Amount (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.InstdAmt"
+      },
+      {
+        "mt": "70",
+        "mtName": "Remittance Information (Seq B)",
+        "mx": "CdtTrfTxInf.UndrlygCstmrCdtTrf.RmtInf.Ustrd"
+      }
+    ]
+  },
+  "MT205": {
+    "name": "Financial Institution Transfer Execution",
+    "mx": "pacs.009",
+    "note": "Domestic equivalent of MT202, used within a single clearing system. Maps to the same pacs.009, with SettlementMethod normally CLRG rather than a correspondent arrangement.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "CdtTrfTxInf.PmtId.EndToEndId"
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Amount",
+        "mx": "CdtTrfTxInf.IntrBkSttlmDt + IntrBkSttlmAmt"
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution",
+        "mx": "CdtTrfTxInf.Dbtr"
+      },
+      {
+        "mt": "58a",
+        "mtName": "Beneficiary Institution",
+        "mx": "CdtTrfTxInf.Cdtr"
+      }
+    ]
+  },
+  "MT204": {
+    "name": "Financial Markets Direct Debit",
+    "mx": "pacs.010",
+    "note": "Collection between institutions. MT204's one-credit-many-debits layout survives in pacs.010's CdtInstr wrapper, which is unusual among the pacs messages.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "19",
+        "mtName": "Sum of Amounts",
+        "mx": "CdtInstr.TtlIntrBkSttlmAmt"
+      },
+      {
+        "mt": "30",
+        "mtName": "Value Date",
+        "mx": "CdtInstr.IntrBkSttlmDt"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Beneficiary Institution",
+        "mx": "CdtInstr.Cdtr"
+      },
+      {
+        "mt": "20 (Seq B)",
+        "mtName": "Transaction Reference",
+        "mx": "CdtInstr.DrctDbtTxInf.PmtId.InstrId"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "CdtInstr.DrctDbtTxInf.PmtId.EndToEndId"
+      },
+      {
+        "mt": "32B",
+        "mtName": "Currency / Transaction Amount",
+        "mx": "CdtInstr.DrctDbtTxInf.IntrBkSttlmAmt"
+      },
+      {
+        "mt": "53a",
+        "mtName": "Debit Institution",
+        "mx": "CdtInstr.DrctDbtTxInf.Dbtr"
+      },
+      {
+        "mt": "72",
+        "mtName": "Sender to Receiver Information",
+        "mx": "CdtInstr.DrctDbtTxInf.RmtInf.Ustrd"
+      }
+    ]
+  },
+  "MT104": {
+    "name": "Direct Debit and Request for Debit Transfer",
+    "mx": "pacs.003",
+    "note": "Maps to pacs.003 for the interbank leg, or pain.008 when the sender is the creditor rather than its bank. Mandate data has no MT equivalent, so MT104 flows carried mandate evidence outside the message entirely. MT104 served both roles depending on who sent it, so it maps to pain.008 when the creditor sends it to its own bank and pacs.003 for the interbank leg.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Sender's Reference",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "30",
+        "mtName": "Requested Execution Date",
+        "mx": "DrctDbtTxInf.IntrBkSttlmDt"
+      },
+      {
+        "mt": "50a",
+        "mtName": "Creditor",
+        "mx": "DrctDbtTxInf.Cdtr + CdtrAcct"
+      },
+      {
+        "mt": "52a",
+        "mtName": "Creditor's Bank",
+        "mx": "DrctDbtTxInf.CdtrAgt"
+      },
+      {
+        "mt": "21",
+        "mtName": "Transaction Reference",
+        "mx": "DrctDbtTxInf.PmtId.EndToEndId"
+      },
+      {
+        "mt": "32B",
+        "mtName": "Currency / Transaction Amount",
+        "mx": "DrctDbtTxInf.IntrBkSttlmAmt"
+      },
+      {
+        "mt": "59a",
+        "mtName": "Debtor",
+        "mx": "DrctDbtTxInf.Dbtr + DbtrAcct"
+      },
+      {
+        "mt": "57a",
+        "mtName": "Debtor's Bank",
+        "mx": "DrctDbtTxInf.DbtrAgt"
+      },
+      {
+        "mt": "70",
+        "mtName": "Remittance Information",
+        "mx": "DrctDbtTxInf.RmtInf.Ustrd"
+      },
+      {
+        "mt": "71A",
+        "mtName": "Details of Charges",
+        "mx": "DrctDbtTxInf.ChrgBr"
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "DrctDbtTxInf.DrctDbtTx.MndtRltdInf",
+        "note": "Mandate id and signature date are MX-only. Their absence from MT is why direct debit disputes were so hard to resolve from message data alone."
+      }
+    ],
+    "alsoMx": [
+      "pain.008"
+    ]
+  },
+  "MT940": {
+    "name": "Customer Statement Message",
+    "mx": "camt.053",
+    "note": "The upgrade with the largest practical payoff. MT940's :61: statement line gave you a date, an amount, a two-letter type and free text; camt.053 gives structured parties, the payer's own reference, the UETR and itemised charges. Reconciliation rates move substantially.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Stmt.Id"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Stmt.Acct.Id"
+      },
+      {
+        "mt": "28C",
+        "mtName": "Statement / Sequence Number",
+        "mx": "Stmt.ElctrncSeqNb + Stmt.LglSeqNb",
+        "note": "One MT tag carrying two numbers becomes two explicit elements."
+      },
+      {
+        "mt": "60a",
+        "mtName": "Opening Balance",
+        "mx": "Stmt.Bal [OPBD]",
+        "note": "MT used distinct tags per balance kind; MX uses one repeating Bal block with a type code. More uniform, but you must read the type."
+      },
+      {
+        "mt": "61",
+        "mtName": "Statement Line",
+        "mx": "Stmt.Ntry",
+        "note": "The core transformation. Value date, entry date, debit/credit mark, amount, transaction type and reference were positional subfields of one tag; each becomes a named element."
+      },
+      {
+        "mt": "61 (subfield 3)",
+        "mtName": "Debit/Credit Mark",
+        "mx": "Stmt.Ntry.CdtDbtInd",
+        "note": "MT's RC and RD reversal marks become CdtDbtInd plus RvslInd true — two elements where MT had one character."
+      },
+      {
+        "mt": "61 (subfield 6)",
+        "mtName": "Transaction Type Identification Code",
+        "mx": "Stmt.Ntry.BkTxCd",
+        "note": "A 4-character MT code becomes a three-level ISO classification plus an optional proprietary code."
+      },
+      {
+        "mt": "61 (subfield 7)",
+        "mtName": "Reference for the Account Owner",
+        "mx": "Stmt.Ntry.NtryDtls.TxDtls.Refs.EndToEndId",
+        "note": "34 characters of whatever survived the chain, versus a dedicated reference the payer set."
+      },
+      {
+        "mt": "62a",
+        "mtName": "Closing Balance",
+        "mx": "Stmt.Bal [CLBD]"
+      },
+      {
+        "mt": "64",
+        "mtName": "Closing Available Balance",
+        "mx": "Stmt.Bal [CLAV]"
+      },
+      {
+        "mt": "65",
+        "mtName": "Forward Available Balance",
+        "mx": "Stmt.Bal [FWAV]"
+      },
+      {
+        "mt": "86",
+        "mtName": "Information to Account Owner",
+        "mx": "Stmt.Ntry.AddtlNtryInf",
+        "note": "A literal mapping, but the point of migrating is to populate the structured elements instead of relaying narrative text."
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "Stmt.Ntry.NtryDtls.TxDtls.RltdPties",
+        "note": "Structured debtor and creditor on a statement entry are MX-only — in MT940 the payer's identity was whatever appeared in field 86."
+      }
+    ]
+  },
+  "MT950": {
+    "name": "Statement Message",
+    "mx": "camt.053",
+    "note": "The bank-to-bank statement. Same target as MT940 but typically carrying fewer details, since nostro reconciliation needs balances and amounts more than party data.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Stmt.Id"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Stmt.Acct.Id"
+      },
+      {
+        "mt": "28C",
+        "mtName": "Statement Number",
+        "mx": "Stmt.ElctrncSeqNb"
+      },
+      {
+        "mt": "60a",
+        "mtName": "Opening Balance",
+        "mx": "Stmt.Bal [OPBD]"
+      },
+      {
+        "mt": "61",
+        "mtName": "Statement Line",
+        "mx": "Stmt.Ntry"
+      },
+      {
+        "mt": "62a",
+        "mtName": "Closing Balance",
+        "mx": "Stmt.Bal [CLBD]"
+      }
+    ]
+  },
+  "MT941": {
+    "name": "Balance Report",
+    "mx": "camt.052",
+    "note": "A balances-only intraday report. Maps to a camt.052 carrying Bal blocks and no entries.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Rpt.Id"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Rpt.Acct.Id"
+      },
+      {
+        "mt": "28",
+        "mtName": "Statement Number",
+        "mx": "Rpt.ElctrncSeqNb"
+      },
+      {
+        "mt": "13D",
+        "mtName": "Date / Time Indication",
+        "mx": "Rpt.CreDtTm",
+        "note": "The as-at moment, which is the whole value of an intraday report."
+      },
+      {
+        "mt": "60F",
+        "mtName": "Opening Balance",
+        "mx": "Rpt.Bal [OPBD]"
+      },
+      {
+        "mt": "90D",
+        "mtName": "Number and Sum of Debits",
+        "mx": "Rpt.TxsSummry.TtlDbtNtries"
+      },
+      {
+        "mt": "90C",
+        "mtName": "Number and Sum of Credits",
+        "mx": "Rpt.TxsSummry.TtlCdtNtries"
+      },
+      {
+        "mt": "62F",
+        "mtName": "Closing Balance",
+        "mx": "Rpt.Bal [CLBD]"
+      },
+      {
+        "mt": "64",
+        "mtName": "Closing Available Balance",
+        "mx": "Rpt.Bal [CLAV]"
+      },
+      {
+        "mt": "65",
+        "mtName": "Forward Available Balance",
+        "mx": "Rpt.Bal [FWAV]"
+      }
+    ]
+  },
+  "MT942": {
+    "name": "Interim Transaction Report",
+    "mx": "camt.052",
+    "note": "Intraday activity since the last report. Maps to a camt.052 with entries that may still be PDNG.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Rpt.Id"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Rpt.Acct.Id"
+      },
+      {
+        "mt": "28C",
+        "mtName": "Statement / Sequence Number",
+        "mx": "Rpt.ElctrncSeqNb"
+      },
+      {
+        "mt": "34F",
+        "mtName": "Floor Limit Indicator",
+        "mx": null,
+        "note": "Only expressible in camt.060 as a request filter, not in the report itself. The report no longer tells you what threshold produced it."
+      },
+      {
+        "mt": "13D",
+        "mtName": "Date / Time Indication",
+        "mx": "Rpt.CreDtTm"
+      },
+      {
+        "mt": "61",
+        "mtName": "Statement Line",
+        "mx": "Rpt.Ntry"
+      },
+      {
+        "mt": "86",
+        "mtName": "Information to Account Owner",
+        "mx": "Rpt.Ntry.AddtlNtryInf"
+      },
+      {
+        "mt": "90D",
+        "mtName": "Number and Sum of Debits",
+        "mx": "Rpt.TxsSummry.TtlDbtNtries"
+      },
+      {
+        "mt": "90C",
+        "mtName": "Number and Sum of Credits",
+        "mx": "Rpt.TxsSummry.TtlCdtNtries"
+      }
+    ]
+  },
+  "MT900": {
+    "name": "Confirmation of Debit",
+    "mx": "camt.054",
+    "note": "A single debit confirmation. Maps to a camt.054 with CdtDbtInd set to DBIT.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Ntfctn.Id"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "Ntfctn.Ntry.NtryDtls.TxDtls.Refs.EndToEndId"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Ntfctn.Acct.Id"
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Amount",
+        "mx": "Ntfctn.Ntry.ValDt + Ntfctn.Ntry.Amt",
+        "note": "CdtDbtInd must be set to DBIT explicitly — in MT the message type itself carried the direction."
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution",
+        "mx": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdAgts.DbtrAgt"
+      },
+      {
+        "mt": "72",
+        "mtName": "Sender to Receiver Information",
+        "mx": "Ntfctn.Ntry.AddtlNtryInf"
+      }
+    ]
+  },
+  "MT910": {
+    "name": "Confirmation of Credit",
+    "mx": "camt.054",
+    "note": "A single credit confirmation — the message a corporate waits on before releasing goods. Maps to a camt.054 with CdtDbtInd set to CRDT.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Ntfctn.Id"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "Ntfctn.Ntry.NtryDtls.TxDtls.Refs.EndToEndId"
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "Ntfctn.Acct.Id"
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Amount",
+        "mx": "Ntfctn.Ntry.ValDt + Ntfctn.Ntry.Amt"
+      },
+      {
+        "mt": "50a",
+        "mtName": "Ordering Customer",
+        "mx": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdPties.Dbtr",
+        "note": "Structured in MX, which is what lets an inbound credit be matched to a customer automatically."
+      },
+      {
+        "mt": "52a",
+        "mtName": "Ordering Institution",
+        "mx": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdAgts.DbtrAgt"
+      },
+      {
+        "mt": "72",
+        "mtName": "Sender to Receiver Information",
+        "mx": "Ntfctn.Ntry.AddtlNtryInf"
+      }
+    ]
+  },
+  "MT920": {
+    "name": "Request Message",
+    "mx": "camt.060",
+    "note": "Asks for a statement or report. The MT message-type number being requested becomes an ISO message definition identifier.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "12",
+        "mtName": "Message Requested",
+        "mx": "RptgReq.ReqdMsgNmId",
+        "note": "'940' becomes 'camt.053.001.08'. The version suffix is new and must be right."
+      },
+      {
+        "mt": "25",
+        "mtName": "Account Identification",
+        "mx": "RptgReq.Acct.Id"
+      },
+      {
+        "mt": "34F",
+        "mtName": "Floor Limit Indicator",
+        "mx": "RptgReq.ReqdTxTp.FlrLmt"
+      }
+    ]
+  },
+  "MT192": {
+    "name": "Request for Cancellation",
+    "mx": "camt.056",
+    "note": "MT192 was largely free-format, with the original payment's details retyped into field 79 as text. camt.056 makes the whole request structured and machine-actionable, which is what made automated stop-and-recall possible.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Assgnmt.Id"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "Undrlyg.TxInf.OrgnlInstrId"
+      },
+      {
+        "mt": "11S",
+        "mtName": "MT and Date of the Original Message",
+        "mx": "Undrlyg.TxInf.OrgnlGrpInf.OrgnlMsgNmId + OrgnlCreDtTm"
+      },
+      {
+        "mt": "79",
+        "mtName": "Narrative Description of the Original Message",
+        "mx": "Undrlyg.TxInf.OrgnlTxRef + CxlRsnInf.AddtlInf",
+        "note": "The big win. What was unparseable narrative becomes typed elements plus a coded cancellation reason."
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "Undrlyg.TxInf.CxlRsnInf.Rsn.Cd",
+        "note": "A coded reason. MT192 had no reason code at all, so every request needed human reading."
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "Case.Id",
+        "note": "A case identifier threaded through the whole exchange — MT had no case concept."
+      }
+    ]
+  },
+  "MT196": {
+    "name": "Answers",
+    "mx": "camt.029",
+    "note": "The reply to MT192. Field 76's answer codes become a typed confirmation status.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "Assgnmt.Id"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "RslvdCase.Id"
+      },
+      {
+        "mt": "11R",
+        "mtName": "MT and Date of the Original Message",
+        "mx": "CxlDtls.TxInfAndSts.OrgnlGrpInf"
+      },
+      {
+        "mt": "76",
+        "mtName": "Answers",
+        "mx": "Sts.Conf + CxlDtls.TxInfAndSts.TxCxlSts",
+        "note": "MT answer codes map onto CNCL, PDCR, RJCR and friends."
+      },
+      {
+        "mt": "77A",
+        "mtName": "Narrative",
+        "mx": "CxlDtls.TxInfAndSts.CxlStsRsnInf.AddtlInf"
+      }
+    ]
+  },
+  "MT199": {
+    "name": "Free Format Message",
+    "mx": "pacs.002",
+    "note": "MT199 was a single 35-line free-text field used for anything, status updates very much included. There is no field-level mapping, because there were no fields — pacs.002 replaces narrative prose with coded statuses and reasons. Any migration that maps MT199 text into AddtlInf has preserved the problem rather than solved it.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "TxInfAndSts.OrgnlEndToEndId"
+      },
+      {
+        "mt": "79",
+        "mtName": "Narrative",
+        "mx": "TxInfAndSts.StsRsnInf.AddtlInf",
+        "note": "Only a fallback. The status itself should be a TxSts code and the reason a StsRsn code."
+      },
+      {
+        "mt": null,
+        "mtName": "(no MT equivalent)",
+        "mx": "TxInfAndSts.TxSts",
+        "note": "A coded, machine-readable status. The entire reason the migration was worth doing."
+      }
+    ],
+    "alsoMx": [
+      "pacs.028"
+    ]
+  },
+  "MT299": {
+    "name": "Free Format Message (Treasury)",
+    "mx": "pacs.002",
+    "note": "The treasury-category sibling of MT199, with the same lack of structure and the same replacement.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Transaction Reference Number",
+        "mx": "GrpHdr.MsgId"
+      },
+      {
+        "mt": "21",
+        "mtName": "Related Reference",
+        "mx": "TxInfAndSts.OrgnlEndToEndId"
+      },
+      {
+        "mt": "79",
+        "mtName": "Narrative",
+        "mx": "TxInfAndSts.StsRsnInf.AddtlInf"
+      }
+    ],
+    "alsoMx": [
+      "pacs.028"
+    ]
+  },
+  "MT103RETN": {
+    "name": "Returned Customer Credit Transfer",
+    "mx": "pacs.004",
+    "note": "A returned MT103, marked by a /RETN/ code in field 72. pacs.004 makes the return a first-class message type with a coded reason, instead of a repurposed payment with a magic string in a narrative field.",
+    "fields": [
+      {
+        "mt": "20",
+        "mtName": "Sender's Reference",
+        "mx": "TxInf.RtrId"
+      },
+      {
+        "mt": "32A",
+        "mtName": "Value Date / Currency / Amount",
+        "mx": "TxInf.RtrdIntrBkSttlmAmt + TxInf.IntrBkSttlmDt"
+      },
+      {
+        "mt": "33B",
+        "mtName": "Original Instructed Amount",
+        "mx": "TxInf.OrgnlIntrBkSttlmAmt"
+      },
+      {
+        "mt": "72",
+        "mtName": "/RETN/ plus reason narrative",
+        "mx": "TxInf.RtrRsnInf.Rsn.Cd + AddtlInf",
+        "note": "The whole return mechanism lived in a code word inside a free-text field. This is the clearest single example of why MT exception handling could not be automated."
+      },
+      {
+        "mt": "50a",
+        "mtName": "Ordering Customer",
+        "mx": "TxInf.RtrChain.Cdtr",
+        "note": "Roles swap on a return: the original debtor becomes the creditor of the return."
+      },
+      {
+        "mt": "59a",
+        "mtName": "Beneficiary Customer",
+        "mx": "TxInf.RtrChain.Dbtr"
+      }
+    ]
+  }
+}

@@ -1,0 +1,352 @@
+{
+  "id": "pain.007.001.09",
+  "short": "pain.007",
+  "name": "CustomerPaymentReversal",
+  "domain": "pain",
+  "label": "Customer Payment Reversal",
+  "direction": "customer → bank",
+  "mtEquivalent": [],
+  "related": [
+    "pain.008",
+    "pacs.003",
+    "pacs.004",
+    "pain.002"
+  ],
+  "summary": "A creditor telling its bank to undo a collection it previously initiated. Self-correction by the party that started the collection — not a dispute raised by the payer.",
+  "whenUsed": "Sent after a pain.008 collection has gone out and the creditor realises it was wrong: duplicated, the wrong amount, or against a cancelled mandate. Must be submitted inside the scheme's reversal window — for SEPA that is a small number of business days after settlement, after which only the debtor's refund rights remain.",
+  "gotchas": [
+    "This is the creditor admitting its own error. A debtor disputing a collection does not use this message; that is a refund or a return initiated on the debtor's side, with different rights and different timeframes.",
+    "The reversal window is short and scheme-specific. Miss it and the message will be rejected, leaving commercial settlement as the only remedy.",
+    "Original fields must echo the pain.008 exactly. Reversing by amount and name rather than by OrgnlEndToEndId is how the wrong collection gets reversed."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.CtrlSum",
+      "name": "Control Sum",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.InitgPty",
+      "name": "Initiating Party",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InitgPty.Nm",
+      "name": "Initiating Party Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInf",
+      "name": "Original Group Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Which file is being reversed."
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlMsgId",
+      "name": "Original Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlMsgNmId",
+      "name": "Original Message Name Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "e.g. pain.008.001.08."
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlCreDtTm",
+      "name": "Original Creation Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlGrpInf.RvslRsnInf",
+      "name": "Reversal Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "A single reason covering the whole original file."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl",
+      "name": "Original Payment Information And Reversal",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Per-batch reversal, mirroring the original PmtInf blocks."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.RvslPmtInfId",
+      "name": "Reversal Payment Information Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your reference for this reversal batch — not the original's id."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.OrgnlPmtInfId",
+      "name": "Original Payment Information Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The PmtInfId from the pain.008 being reversed."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.BtchBookg",
+      "name": "Batch Booking",
+      "card": "[0..1]",
+      "type": "indicator",
+      "tier": 3
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.PmtMtd",
+      "name": "Payment Method",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "PmtMtd",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.RvslRsnInf",
+      "name": "Reversal Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.RvslRsnInf.Rsn",
+      "name": "Reason",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.RvslRsnInf.Rsn.Cd",
+      "name": "Reversal Reason Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "RvslRsn",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.RvslRsnInf.AddtlInf",
+      "name": "Additional Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf",
+      "name": "Transaction Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per collection being reversed. Omitting this level reverses the whole batch."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.RvslId",
+      "name": "Reversal Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlInstrId",
+      "name": "Original Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlEndToEndId",
+      "name": "Original End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The precise identifier of the collection to reverse. Use it."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlInstdAmt",
+      "name": "Original Instructed Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "Must match the original exactly — partial reversals are not supported."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.RvsdInstdAmt",
+      "name": "Reversed Instructed Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.ChrgBr",
+      "name": "Charge Bearer",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ChrgBr",
+      "tier": 3
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.RvslRsnInf",
+      "name": "Reversal Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.RvslRsnInf.Rsn",
+      "name": "Reason",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.RvslRsnInf.Rsn.Cd",
+      "name": "Reversal Reason Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "RvslRsn",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlTxRef",
+      "name": "Original Transaction Reference",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Copy of the original collection, including the mandate detail, so the bank can be sure it is reversing the right one."
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlTxRef.MndtRltdInf",
+      "name": "Original Mandate Related Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlTxRef.Dbtr",
+      "name": "Original Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlTxRef.DbtrAcct",
+      "name": "Original Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndRvsl.TxInf.OrgnlTxRef.Cdtr",
+      "name": "Original Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pain.007.001.09\">",
+    "  <CstmrPmtRvsl>",
+    "    <GrpHdr>",
+    "      <MsgId>HELIOS-RVSL-20261016-01</MsgId>",
+    "      <CreDtTm>2026-10-16T09:00:00+02:00</CreDtTm>",
+    "      <NbOfTxs>1</NbOfTxs>",
+    "      <InitgPty>",
+    "        <Nm>Helios Energie GmbH</Nm>",
+    "      </InitgPty>",
+    "    </GrpHdr>",
+    "    <OrgnlGrpInf>",
+    "      <OrgnlMsgId>HELIOS-DD-20261010-01</OrgnlMsgId>",
+    "      <OrgnlMsgNmId>pain.008.001.08</OrgnlMsgNmId>",
+    "      <OrgnlCreDtTm>2026-10-10T05:30:00+02:00</OrgnlCreDtTm>",
+    "    </OrgnlGrpInf>",
+    "    <OrgnlPmtInfAndRvsl>",
+    "      <RvslPmtInfId>HELIOS-RVSL-001</RvslPmtInfId>",
+    "      <OrgnlPmtInfId>HELIOS-RCUR-202610</OrgnlPmtInfId>",
+    "      <NbOfTxs>1</NbOfTxs>",
+    "      <PmtMtd>DD</PmtMtd>",
+    "      <TxInf>",
+    "        <RvslId>RVSL-0001</RvslId>",
+    "        <OrgnlInstrId>HEL-0001</OrgnlInstrId>",
+    "        <OrgnlEndToEndId>SUB-2026-10-8891</OrgnlEndToEndId>",
+    "        <OrgnlInstdAmt Ccy=\"EUR\">49.90</OrgnlInstdAmt>",
+    "        <RvslRsnInf>",
+    "          <Rsn>",
+    "            <Cd>AM05</Cd>",
+    "          </Rsn>",
+    "          <AddtlInf>Collected twice for October billing cycle</AddtlInf>",
+    "        </RvslRsnInf>",
+    "        <OrgnlTxRef>",
+    "          <MndtRltdInf>",
+    "            <MndtId>MND-55012</MndtId>",
+    "            <DtOfSgntr>2024-03-11</DtOfSgntr>",
+    "          </MndtRltdInf>",
+    "          <Dbtr>",
+    "            <Nm>Lena Hofmann</Nm>",
+    "          </Dbtr>",
+    "        </OrgnlTxRef>",
+    "      </TxInf>",
+    "    </OrgnlPmtInfAndRvsl>",
+    "  </CstmrPmtRvsl>",
+    "</Document>"
+  ],
+  "mtNote": "No true MT equivalent: direct debit reversal had no distinct MT message."
+}

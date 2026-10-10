@@ -1,0 +1,237 @@
+{
+  "id": "pacs.028.001.03",
+  "short": "pacs.028",
+  "name": "FIToFIPaymentStatusRequest",
+  "domain": "pacs",
+  "label": "FI to FI Payment Status Request",
+  "direction": "bank → bank",
+  "mtEquivalent": [
+    "MT199",
+    "MT299"
+  ],
+  "related": [
+    "pacs.008",
+    "pacs.002",
+    "camt.056"
+  ],
+  "summary": "Asks an agent what happened to a payment. A pull-based enquiry for when the expected pacs.002 never arrived.",
+  "whenUsed": "Sent when a payment has gone quiet — no status, no settlement confirmation, and the customer is asking. The receiving agent answers with a pacs.002. Introduced to replace the free-format MT199 enquiries that previously had to be read by a human.",
+  "gotchas": [
+    "This asks a question; it does not change anything. To actually stop or recall a payment you need camt.056. Sending pacs.028 when you meant to recall wastes the window in which recall is still possible.",
+    "Identify the payment by UETR wherever you can. Matching on Original Instruction Id fails across hops because that reference is replaced at every agent.",
+    "There is no status in this message. A pacs.028 containing a status is a misunderstanding of the direction of the exchange."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Optional here, unusually — the transaction block can stand alone."
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InstgAgt",
+      "name": "Instructing Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.InstdAgt",
+      "name": "Instructed Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlGrpInf",
+      "name": "Original Group Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlMsgId",
+      "name": "Original Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlMsgNmId",
+      "name": "Original Message Name Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInf.OrgnlCreDtTm",
+      "name": "Original Creation Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 2
+    },
+    {
+      "path": "TxInf",
+      "name": "Transaction Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One block per payment being asked about."
+    },
+    {
+      "path": "TxInf.StsReqId",
+      "name": "Status Request Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your reference for this enquiry, echoed back so you can match the answer."
+    },
+    {
+      "path": "TxInf.OrgnlGrpInf",
+      "name": "Original Group Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlInstrId",
+      "name": "Original Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlEndToEndId",
+      "name": "Original End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "TxInf.OrgnlTxId",
+      "name": "Original Transaction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlUETR",
+      "name": "Original UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The reference that works. Prefer it over all the others."
+    },
+    {
+      "path": "TxInf.AccptncDtTm",
+      "name": "Acceptance Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 3
+    },
+    {
+      "path": "TxInf.ClrSysRef",
+      "name": "Clearing System Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3
+    },
+    {
+      "path": "TxInf.InstgAgt",
+      "name": "Instructing Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "TxInf.InstdAgt",
+      "name": "Instructed Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "TxInf.OrgnlTxRef",
+      "name": "Original Transaction Reference",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Details of the payment you are asking about, so the receiver can find it even if the references do not match."
+    },
+    {
+      "path": "TxInf.OrgnlTxRef.IntrBkSttlmAmt",
+      "name": "Original Interbank Settlement Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlTxRef.IntrBkSttlmDt",
+      "name": "Original Interbank Settlement Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlTxRef.Dbtr",
+      "name": "Original Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "TxInf.OrgnlTxRef.Cdtr",
+      "name": "Original Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pacs.028.001.03\">",
+    "  <FIToFIPmtStsReq>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKAAU3M-ENQ-20261013-0007</MsgId>",
+    "      <CreDtTm>2026-10-13T10:14:00+11:00</CreDtTm>",
+    "    </GrpHdr>",
+    "    <TxInf>",
+    "      <StsReqId>ENQ-0007</StsReqId>",
+    "      <OrgnlGrpInf>",
+    "        <OrgnlMsgId>BNKAAU3MX20261010000199</OrgnlMsgId>",
+    "        <OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId>",
+    "      </OrgnlGrpInf>",
+    "      <OrgnlEndToEndId>INV-2026-4471</OrgnlEndToEndId>",
+    "      <OrgnlUETR>7a9c1e42-3b6d-4f8a-9c21-5e7d0a3b9f14</OrgnlUETR>",
+    "      <OrgnlTxRef>",
+    "        <IntrBkSttlmAmt Ccy=\"AUD\">15750.00</IntrBkSttlmAmt>",
+    "        <IntrBkSttlmDt>2026-10-10</IntrBkSttlmDt>",
+    "      </OrgnlTxRef>",
+    "    </TxInf>",
+    "  </FIToFIPmtStsReq>",
+    "</Document>"
+  ]
+}

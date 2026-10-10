@@ -1,0 +1,311 @@
+{
+  "id": "pacs.010.001.03",
+  "short": "pacs.010",
+  "name": "FinancialInstitutionDirectDebit",
+  "domain": "pacs",
+  "label": "Financial Institution Direct Debit",
+  "direction": "bank → bank",
+  "mtEquivalent": [
+    "MT204"
+  ],
+  "related": [
+    "pacs.009",
+    "pacs.003",
+    "pacs.002"
+  ],
+  "summary": "One financial institution debits another's account under a pre-existing authority. The bank-to-bank counterpart of a direct debit, with no customer involved.",
+  "whenUsed": "Narrow and specialist: reimbursement claims between institutions, collecting fees or margin from a correspondent, and settlement of obligations where a standing authority already exists. Replaces MT204. Because it pulls funds from another institution's account, access is normally governed by a bilateral agreement rather than open scheme membership.",
+  "gotchas": [
+    "There is no mandate structure here as there is in pacs.003 — the authority is bilateral and outside the message. Nothing in the message proves you were entitled to debit, so operational controls carry that weight.",
+    "The creditor is the one sending the message and receiving the funds, which is the opposite of the pacs.009 convention. Mapping the two messages with shared code needs care.",
+    "Many schemes do not support this message at all. Check bilateral and scheme agreements before building a flow around it."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.SttlmInf",
+      "name": "Settlement Information",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.SttlmInf.SttlmMtd",
+      "name": "Settlement Method",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "SttlmMtd",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InstgAgt",
+      "name": "Instructing Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.InstdAgt",
+      "name": "Instructed Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr",
+      "name": "Credit Instruction",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Groups the collections being made in favour of one creditor. An unusual two-level structure: the credit side is stated once, then the debits against it are listed."
+    },
+    {
+      "path": "CdtInstr.CdtId",
+      "name": "Credit Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.TtlIntrBkSttlmAmt",
+      "name": "Total Interbank Settlement Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2,
+      "note": "Sum of the direct debits below."
+    },
+    {
+      "path": "CdtInstr.IntrBkSttlmDt",
+      "name": "Interbank Settlement Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.Cdtr",
+      "name": "Creditor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The institution being paid — the sender of this message."
+    },
+    {
+      "path": "CdtInstr.Cdtr.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.Cdtr.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.CdtrAcct",
+      "name": "Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.CdtrAgt",
+      "name": "Creditor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf",
+      "name": "Direct Debit Transaction Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per institution being debited."
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.PmtId",
+      "name": "Payment Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.PmtId.InstrId",
+      "name": "Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.PmtId.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.PmtId.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.PmtTpInf",
+      "name": "Payment Type Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.IntrBkSttlmAmt",
+      "name": "Interbank Settlement Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.Dbtr",
+      "name": "Debtor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The institution whose account is being debited."
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.Dbtr.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.Dbtr.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.DbtrAcct",
+      "name": "Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The account being drawn on — normally a nostro held with the sender."
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.Purp",
+      "name": "Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.Purp.Cd",
+      "name": "Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Purp",
+      "tier": 2
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.RmtInf",
+      "name": "Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "What the claim is for. Worth populating — the debited institution will otherwise have to ask."
+    },
+    {
+      "path": "CdtInstr.DrctDbtTxInf.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 2,
+      "note": "What the claim is for, in free text."
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pacs.010.001.03\">",
+    "  <FIDrctDbt>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKAAU3M-FIDD-20261010-003</MsgId>",
+    "      <CreDtTm>2026-10-10T16:40:00+11:00</CreDtTm>",
+    "      <NbOfTxs>1</NbOfTxs>",
+    "      <SttlmInf>",
+    "        <SttlmMtd>INGA</SttlmMtd>",
+    "      </SttlmInf>",
+    "    </GrpHdr>",
+    "    <CdtInstr>",
+    "      <CdtId>CLAIM-2026-10-003</CdtId>",
+    "      <IntrBkSttlmDt>2026-10-10</IntrBkSttlmDt>",
+    "      <Cdtr>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKAAU3MXXX</BICFI>",
+    "        </FinInstnId>",
+    "      </Cdtr>",
+    "      <DrctDbtTxInf>",
+    "        <PmtId>",
+    "          <EndToEndId>FEE-Q3-2026</EndToEndId>",
+    "        </PmtId>",
+    "        <IntrBkSttlmAmt Ccy=\"AUD\">2400.00</IntrBkSttlmAmt>",
+    "        <Dbtr>",
+    "          <FinInstnId>",
+    "            <BICFI>BNKBAU2SXXX</BICFI>",
+    "          </FinInstnId>",
+    "        </Dbtr>",
+    "        <RmtInf>",
+    "          <Ustrd>Q3 2026 correspondent account maintenance fees</Ustrd>",
+    "        </RmtInf>",
+    "      </DrctDbtTxInf>",
+    "    </CdtInstr>",
+    "  </FIDrctDbt>",
+    "</Document>"
+  ]
+}

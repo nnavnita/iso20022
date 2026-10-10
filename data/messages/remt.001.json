@@ -1,0 +1,337 @@
+{
+  "id": "remt.001.001.04",
+  "short": "remt.001",
+  "name": "RemittanceAdvice",
+  "domain": "remt",
+  "label": "Remittance Advice",
+  "direction": "customer → customer (via banks)",
+  "mtEquivalent": [],
+  "related": [
+    "pain.001",
+    "pacs.008",
+    "camt.054"
+  ],
+  "summary": "Carries rich invoice-level remittance detail separately from the payment itself, linked back by reference. The answer to 'the payment arrived but I cannot tell which 200 invoices it covers'.",
+  "whenUsed": "When remittance detail will not fit in a payment message. A payment can carry 140 characters of unstructured text; a single supplier payment settling 300 invoices needs far more than that. The payment carries a pointer in Related Remittance Information, and the detail travels here — bank-to-bank, or increasingly directly between the trading parties.",
+  "gotchas": [
+    "Adoption is thin. Many banks and corporates never implemented it, so a remt.001 may silently go nowhere. Confirm support with the counterparty before designing a reconciliation process that depends on it.",
+    "The link between payment and advice is only as good as the reference. If the payment's RltdRmtInf does not point at this advice's RmtId, the creditor receives two unconnected things and is worse off than with truncated text.",
+    "There is no settlement here at all. This message moves no money and has no clearing status — treating a delivered remt.001 as evidence of payment is a serious error."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InitgPty",
+      "name": "Initiating Party",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The party sending the advice — normally the debtor who made the payment."
+    },
+    {
+      "path": "GrpHdr.MsgRcpt",
+      "name": "Message Recipient",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Who should receive it, where that differs from the creditor."
+    },
+    {
+      "path": "RmtAdvc",
+      "name": "Remittance Advice",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One advice per payment being explained."
+    },
+    {
+      "path": "RmtAdvc.RmtId",
+      "name": "Remittance Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The advice's own id. This is the value the payment message must quote in its Related Remittance Information for the two to be matched."
+    },
+    {
+      "path": "RmtAdvc.RmtdAmt",
+      "name": "Remitted Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "Total being explained. Should equal the payment amount; a mismatch means the advice and payment do not belong together."
+    },
+    {
+      "path": "RmtAdvc.Dbtr",
+      "name": "Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RmtAdvc.Dbtr.Nm",
+      "name": "Debtor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "RmtAdvc.Cdtr",
+      "name": "Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RmtAdvc.Cdtr.Nm",
+      "name": "Creditor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "RmtAdvc.OrgnlPmtInf",
+      "name": "Original Payment Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Identifies the payment this advice explains."
+    },
+    {
+      "path": "RmtAdvc.OrgnlPmtInf.RltdRmtInf",
+      "name": "Related Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "RmtAdvc.OrgnlPmtInf.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The payment's end-to-end reference. The strongest link back to the money."
+    },
+    {
+      "path": "RmtAdvc.OrgnlPmtInf.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "RmtAdvc.RmtInf",
+      "name": "Remittance Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Repeating — and this is the point of the whole message. One occurrence per invoice or credit note, with no practical ceiling."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd",
+      "name": "Structured Remittance Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocInf",
+      "name": "Referred Document Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "The document being settled."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocInf.Tp",
+      "name": "Document Type",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "CINV for a commercial invoice, CREN for a credit note, DEBN for a debit note, and so on. What makes automated matching possible."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocInf.Nb",
+      "name": "Document Number",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The invoice number. The field the creditor's ledger actually matches on."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocInf.RltdDt",
+      "name": "Related Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 2,
+      "note": "Invoice date."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt",
+      "name": "Referred Document Amount",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Breaks down what was due and what is being paid."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.DuePyblAmt",
+      "name": "Due Payable Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "Invoice face value."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.DscntApldAmt",
+      "name": "Discount Applied Amount",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "Early-settlement discount taken. Explains a short payment that is not actually short."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.CdtNoteAmt",
+      "name": "Credit Note Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2,
+      "note": "Credit offset against this invoice."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.TaxAmt",
+      "name": "Tax Amount",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.AdjstmntAmtAndRsn",
+      "name": "Adjustment Amount And Reason",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "Deductions with an explanation — short-shipment, damage, dispute. The element that prevents a reconciliation query."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.RfrdDocAmt.RmtdAmt",
+      "name": "Remitted Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "What is actually being paid against this document, after everything above."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.CdtrRefInf",
+      "name": "Creditor Reference Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.Invcr",
+      "name": "Invoicer",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Who issued the invoice, when that is not the creditor."
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.Invcee",
+      "name": "Invoicee",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "RmtAdvc.RmtInf.Strd.AddtlRmtInf",
+      "name": "Additional Remittance Information",
+      "card": "[0..3]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:remt.001.001.04\">",
+    "  <RmtAdvc>",
+    "    <GrpHdr>",
+    "      <MsgId>THORN-REMT-20261010-01</MsgId>",
+    "      <CreDtTm>2026-10-10T08:15:00+11:00</CreDtTm>",
+    "      <InitgPty>",
+    "        <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "      </InitgPty>",
+    "    </GrpHdr>",
+    "    <RmtAdvc>",
+    "      <RmtId>REMT-4471</RmtId>",
+    "      <RmtdAmt Ccy=\"AUD\">15750.00</RmtdAmt>",
+    "      <Dbtr>",
+    "        <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "      </Dbtr>",
+    "      <Cdtr>",
+    "        <Nm>Riverina Timber Supplies</Nm>",
+    "      </Cdtr>",
+    "      <OrgnlPmtInf>",
+    "        <EndToEndId>INV-2026-4471</EndToEndId>",
+    "      </OrgnlPmtInf>",
+    "      <RmtInf>",
+    "        <Strd>",
+    "          <RfrdDocInf>",
+    "            <Tp>",
+    "              <CdOrPrtry>",
+    "                <Cd>CINV</Cd>",
+    "              </CdOrPrtry>",
+    "            </Tp>",
+    "            <Nb>INV-2026-4471</Nb>",
+    "            <RltdDt>2026-09-12</RltdDt>",
+    "          </RfrdDocInf>",
+    "          <RfrdDocAmt>",
+    "            <DuePyblAmt Ccy=\"AUD\">16000.00</DuePyblAmt>",
+    "            <AdjstmntAmtAndRsn>",
+    "              <Amt Ccy=\"AUD\">250.00</Amt>",
+    "              <CdtDbtInd>DBIT</CdtDbtInd>",
+    "              <Rsn>Short shipment, 5 lengths not delivered</Rsn>",
+    "            </AdjstmntAmtAndRsn>",
+    "            <RmtdAmt Ccy=\"AUD\">15750.00</RmtdAmt>",
+    "          </RfrdDocAmt>",
+    "        </Strd>",
+    "      </RmtInf>",
+    "    </RmtAdvc>",
+    "  </RmtAdvc>",
+    "</Document>"
+  ],
+  "mtNote": "No MT equivalent: MT had nothing that could carry invoice-level remittance detail. Corporates sent it out of band — by email, EDI or a bank portal — which is why payment-to-invoice matching was so often manual."
+}

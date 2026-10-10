@@ -1,0 +1,411 @@
+{
+  "id": "camt.054.001.08",
+  "short": "camt.054",
+  "name": "BankToCustomerDebitCreditNotification",
+  "domain": "camt",
+  "label": "Bank To Customer Debit Credit Notification",
+  "direction": "bank → customer",
+  "mtEquivalent": [
+    "MT900",
+    "MT910"
+  ],
+  "related": [
+    "camt.052",
+    "camt.053",
+    "pacs.008"
+  ],
+  "summary": "A push notification that a single debit or credit has hit an account. Event-driven, rather than the periodic sweep that camt.052 and camt.053 provide.",
+  "whenUsed": "Real-time cash visibility: telling a corporate that an inbound payment has arrived so it can release goods, or confirming an outbound debit. Replaces MT900 (debit confirmation) and MT910 (credit confirmation). Also used to notify batches of returns and collections.",
+  "gotchas": [
+    "A notification is not a statement entry and does not guarantee the figure will be identical on the camt.053 — charges may be applied afterwards. Reconcile against the statement, use notifications to trigger action.",
+    "Delivery is not guaranteed in order or exactly once. A missed or duplicated notification must not change your ledger; de-duplicate on AcctSvcrRef.",
+    "No balance is required in this message. Code that assumes a notification tells you the new account balance will be disappointed — if you need a balance, ask for a camt.052."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgRcpt",
+      "name": "Message Recipient",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn",
+      "name": "Notification",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per account being notified."
+    },
+    {
+      "path": "Ntfctn.Id",
+      "name": "Notification Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Acct",
+      "name": "Account",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Acct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Acct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Acct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Acct.Ccy",
+      "name": "Account Currency",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Acct.Ownr",
+      "name": "Account Owner",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.TxsSummry",
+      "name": "Transactions Summary",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Useful when the notification covers a batch of items rather than one."
+    },
+    {
+      "path": "Ntfctn.Ntry",
+      "name": "Entry",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "The movement being notified."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryRef",
+      "name": "Entry Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Ntry.Amt",
+      "name": "Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.CdtDbtInd",
+      "name": "Credit Debit Indicator",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "CdtDbtInd",
+      "tier": 1,
+      "note": "The whole point of the message: which way the money went."
+    },
+    {
+      "path": "Ntfctn.Ntry.RvslInd",
+      "name": "Reversal Indicator",
+      "card": "[0..1]",
+      "type": "indicator",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Ntry.Sts",
+      "name": "Status",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "BOOK or PDNG. A PDNG notification is an early warning, not a confirmation."
+    },
+    {
+      "path": "Ntfctn.Ntry.BookgDt",
+      "name": "Booking Date",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.ValDt",
+      "name": "Value Date",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.AcctSvcrRef",
+      "name": "Account Servicer Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your de-duplication key, and the value that ties this notification to the eventual statement entry."
+    },
+    {
+      "path": "Ntfctn.Ntry.BkTxCd",
+      "name": "Bank Transaction Code",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.BkTxCd.Domn",
+      "name": "Domain",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.BkTxCd.Domn.Cd",
+      "name": "Domain Code",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.BkTxCd.Domn.Fmly",
+      "name": "Family",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.BkTxCd.Domn.Fmly.Cd",
+      "name": "Family Code",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "RCDT for a received credit is the common case — the inbound payment a corporate is waiting on."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls",
+      "name": "Entry Details",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls",
+      "name": "Transaction Details",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.Refs",
+      "name": "References",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.Refs.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The payer's reference — what lets you identify which customer just paid you, within seconds of the funds arriving."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.Refs.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.Amt",
+      "name": "Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdPties",
+      "name": "Related Parties",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdPties.Dbtr",
+      "name": "Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Who paid you."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdPties.DbtrAcct",
+      "name": "Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdAgts",
+      "name": "Related Agents",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The agents involved in the notified movement."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RltdAgts.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The paying institution — the MT field 52a position on an MT900 or MT910."
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RmtInf",
+      "name": "Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "Ntfctn.Ntry.NtryDtls.TxDtls.RtrInf",
+      "name": "Return Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "When the notified item is a return, the reason it came back."
+    },
+    {
+      "path": "Ntfctn.Ntry.AddtlNtryInf",
+      "name": "Additional Entry Information",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "Ntfctn.AddtlNtfctnInf",
+      "name": "Additional Notification Information",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:camt.054.001.08\">",
+    "  <BkToCstmrDbtCdtNtfctn>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKB-NTFY-20261010-55120</MsgId>",
+    "      <CreDtTm>2026-10-10T09:31:40+11:00</CreDtTm>",
+    "    </GrpHdr>",
+    "    <Ntfctn>",
+    "      <Id>NTFY-55120</Id>",
+    "      <Acct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>650000987654321</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "        <Ccy>AUD</Ccy>",
+    "      </Acct>",
+    "      <Ntry>",
+    "        <Amt Ccy=\"AUD\">15750.00</Amt>",
+    "        <CdtDbtInd>CRDT</CdtDbtInd>",
+    "        <Sts>",
+    "          <Cd>BOOK</Cd>",
+    "        </Sts>",
+    "        <BookgDt>",
+    "          <DtTm>2026-10-10T09:31:38+11:00</DtTm>",
+    "        </BookgDt>",
+    "        <ValDt>",
+    "          <Dt>2026-10-10</Dt>",
+    "        </ValDt>",
+    "        <AcctSvcrRef>BNKB0000552099</AcctSvcrRef>",
+    "        <BkTxCd>",
+    "          <Domn>",
+    "            <Cd>PMNT</Cd>",
+    "            <Fmly>",
+    "              <Cd>RCDT</Cd>",
+    "              <SubFmlyCd>DMCT</SubFmlyCd>",
+    "            </Fmly>",
+    "          </Domn>",
+    "        </BkTxCd>",
+    "        <NtryDtls>",
+    "          <TxDtls>",
+    "            <Refs>",
+    "              <EndToEndId>INV-2026-4471</EndToEndId>",
+    "              <UETR>7a9c1e42-3b6d-4f8a-9c21-5e7d0a3b9f14</UETR>",
+    "            </Refs>",
+    "            <Amt Ccy=\"AUD\">15750.00</Amt>",
+    "            <RltdPties>",
+    "              <Dbtr>",
+    "                <Pty>",
+    "                  <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "                </Pty>",
+    "              </Dbtr>",
+    "            </RltdPties>",
+    "            <RmtInf>",
+    "              <Ustrd>Invoice INV-2026-4471 hardwood order</Ustrd>",
+    "            </RmtInf>",
+    "          </TxDtls>",
+    "        </NtryDtls>",
+    "      </Ntry>",
+    "    </Ntfctn>",
+    "  </BkToCstmrDbtCdtNtfctn>",
+    "</Document>"
+  ]
+}

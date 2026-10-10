@@ -1,0 +1,524 @@
+{
+  "id": "pacs.009.001.08",
+  "short": "pacs.009",
+  "name": "FinancialInstitutionCreditTransfer",
+  "domain": "pacs",
+  "label": "Financial Institution Credit Transfer",
+  "direction": "bank → bank",
+  "mtEquivalent": [
+    "MT202",
+    "MT202COV",
+    "MT205",
+    "MT205COV"
+  ],
+  "related": [
+    "pacs.008",
+    "pacs.002",
+    "pacs.004"
+  ],
+  "summary": "Moves funds where both the debtor and the creditor are financial institutions — a bank paying another bank on its own behalf, rather than for a customer.",
+  "whenUsed": "Three distinct jobs share this one message. Plain bank-to-bank transfers (the MT202 case: treasury settlement, nostro funding, liquidity moves). Cover payments (the MT202COV case: the funds leg that settles a separate customer pacs.008 travelling by a different route). And, with the ADV variant, advice of a transfer. Which job it is doing is signalled by whether Underlying Customer Credit Transfer is present.",
+  "gotchas": [
+    "Remittance Information does not exist in this message. If you need to tell a creditor what a payment is for, it is a customer transfer and belongs in pacs.008.",
+    "A cover payment carries the underlying customer's details inside UndrlygCstmrCdtTrf purely so the receiving agent can sanctions-screen them. Those details are informational — the money movement is bank to bank, and crediting the underlying creditor from a pacs.009 COV is a serious processing error.",
+    "Debtor and Creditor here are BranchAndFinancialInstitutionIdentification, not Party — so they have a BICFI, not a Name-and-address Party block. Code that reuses a pacs.008 party parser on this message will not find what it expects."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Unique per sender. Max 35 characters."
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.SttlmInf",
+      "name": "Settlement Information",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.SttlmInf.SttlmMtd",
+      "name": "Settlement Method",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "SttlmMtd",
+      "tier": 1,
+      "note": "COVE here specifically marks this as the cover leg of another payment."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.InstgRmbrsmntAgt",
+      "name": "Instructing Reimbursement Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "The instructing agent's correspondent — the MT field 53a position."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.InstdRmbrsmntAgt",
+      "name": "Instructed Reimbursement Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "The instructed agent's correspondent — the MT field 54a position."
+    },
+    {
+      "path": "GrpHdr.InstgAgt",
+      "name": "Instructing Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.InstdAgt",
+      "name": "Instructed Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf",
+      "name": "Credit Transfer Transaction Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId",
+      "name": "Payment Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.InstrId",
+      "name": "Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "For a cover payment this is the cover's own UETR — distinct from the underlying customer payment's UETR, which appears inside UndrlygCstmrCdtTrf. Keeping the two apart is what makes end-to-end tracking of a cover arrangement possible."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf",
+      "name": "Payment Type Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.SvcLvl",
+      "name": "Service Level",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.SvcLvl.Cd",
+      "name": "Service Level Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "SvcLvl",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.LclInstrm",
+      "name": "Local Instrument",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.LclInstrm.Cd",
+      "name": "Local Instrument Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "LclInstrm",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.CtgyPurp",
+      "name": "Category Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.CtgyPurp.Cd",
+      "name": "Category Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "CtgyPurp",
+      "tier": 2,
+      "note": "CORT for trade settlement and TREA for treasury operations are the usual values on this message."
+    },
+    {
+      "path": "CdtTrfTxInf.IntrBkSttlmAmt",
+      "name": "Interbank Settlement Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.IntrBkSttlmDt",
+      "name": "Interbank Settlement Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmPrty",
+      "name": "Settlement Priority",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Prty",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmTmIndctn",
+      "name": "Settlement Time Indication",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmTmReq",
+      "name": "Settlement Time Request",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "CLS-time requests live here, which matters for FX settlement."
+    },
+    {
+      "path": "CdtTrfTxInf.PrvsInstgAgt1",
+      "name": "Previous Instructing Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.IntrmyAgt1",
+      "name": "Intermediary Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.IntrmyAgt2",
+      "name": "Intermediary Agent 2",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr",
+      "name": "Debtor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "A financial institution, not a party. Identified by BICFI or clearing-system member id."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct",
+      "name": "Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The nostro or vostro being debited."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Optional here, unlike pacs.008 — the debtor is itself a bank and often needs no separate agent."
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt",
+      "name": "Creditor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr",
+      "name": "Creditor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Also a financial institution."
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct",
+      "name": "Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.InstrForCdtrAgt",
+      "name": "Instruction For Creditor Agent",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.InstrForNxtAgt",
+      "name": "Instruction For Next Agent",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.Purp",
+      "name": "Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.Purp.Cd",
+      "name": "Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Purp",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf",
+      "name": "Underlying Customer Credit Transfer",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Present only in the COV variant. Carries a copy of the customer payment this cover settles, so the receiving agent can screen the real parties. Informational — never credit from it."
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Dbtr",
+      "name": "Underlying Debtor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The actual customer who originated the payment."
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Dbtr.Nm",
+      "name": "Underlying Debtor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Dbtr.PstlAdr",
+      "name": "Underlying Debtor Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.DbtrAcct",
+      "name": "Underlying Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.DbtrAgt",
+      "name": "Underlying Debtor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.IntrmyAgt1",
+      "name": "Underlying Intermediary Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "An intermediary on the underlying customer payment, not on the cover."
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Cdtr",
+      "name": "Underlying Creditor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.Cdtr.Nm",
+      "name": "Underlying Creditor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.CdtrAcct",
+      "name": "Underlying Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.CdtrAgt",
+      "name": "Underlying Creditor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.InstdAmt",
+      "name": "Underlying Instructed Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 2,
+      "note": "The customer payment's amount, which may differ from the cover amount."
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.RmtInf",
+      "name": "Underlying Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The only place remittance text legitimately appears in a pacs.009 — and it belongs to the underlying customer payment, not to this one."
+    },
+    {
+      "path": "CdtTrfTxInf.UndrlygCstmrCdtTrf.RmtInf.Ustrd",
+      "name": "Underlying Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 2,
+      "note": "Belongs to the customer payment being covered. The cover payment itself has no remittance information."
+    },
+    {
+      "path": "CdtTrfTxInf.SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pacs.009.001.08\">",
+    "  <FICdtTrf>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKAAU3MC20261010000045</MsgId>",
+    "      <CreDtTm>2026-10-10T11:02:13+11:00</CreDtTm>",
+    "      <NbOfTxs>1</NbOfTxs>",
+    "      <SttlmInf>",
+    "        <SttlmMtd>COVE</SttlmMtd>",
+    "      </SttlmInf>",
+    "    </GrpHdr>",
+    "    <CdtTrfTxInf>",
+    "      <PmtId>",
+    "        <InstrId>COVER0001</InstrId>",
+    "        <EndToEndId>COV-INV-2026-4471</EndToEndId>",
+    "        <UETR>b2d81f05-7c44-4a19-8e63-1f90ac55d207</UETR>",
+    "      </PmtId>",
+    "      <IntrBkSttlmAmt Ccy=\"USD\">10250.00</IntrBkSttlmAmt>",
+    "      <IntrBkSttlmDt>2026-10-10</IntrBkSttlmDt>",
+    "      <Dbtr>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKAAU3MXXX</BICFI>",
+    "        </FinInstnId>",
+    "      </Dbtr>",
+    "      <Cdtr>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKCUS33XXX</BICFI>",
+    "        </FinInstnId>",
+    "      </Cdtr>",
+    "      <UndrlygCstmrCdtTrf>",
+    "        <Dbtr>",
+    "          <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "          <PstlAdr>",
+    "            <TwnNm>Thornbury</TwnNm>",
+    "            <Ctry>AU</Ctry>",
+    "          </PstlAdr>",
+    "        </Dbtr>",
+    "        <DbtrAgt>",
+    "          <FinInstnId>",
+    "            <BICFI>BNKAAU3MXXX</BICFI>",
+    "          </FinInstnId>",
+    "        </DbtrAgt>",
+    "        <CdtrAgt>",
+    "          <FinInstnId>",
+    "            <BICFI>BNKDUS44XXX</BICFI>",
+    "          </FinInstnId>",
+    "        </CdtrAgt>",
+    "        <Cdtr>",
+    "          <Nm>Pacific Hardwood Importers Inc</Nm>",
+    "        </Cdtr>",
+    "        <InstdAmt Ccy=\"USD\">10250.00</InstdAmt>",
+    "        <RmtInf>",
+    "          <Ustrd>Invoice INV-2026-4471</Ustrd>",
+    "        </RmtInf>",
+    "      </UndrlygCstmrCdtTrf>",
+    "    </CdtTrfTxInf>",
+    "  </FICdtTrf>",
+    "</Document>"
+  ]
+}

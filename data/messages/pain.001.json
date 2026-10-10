@@ -1,0 +1,762 @@
+{
+  "id": "pain.001.001.09",
+  "short": "pain.001",
+  "name": "CustomerCreditTransferInitiation",
+  "domain": "pain",
+  "label": "Customer Credit Transfer Initiation",
+  "direction": "customer → bank",
+  "mtEquivalent": [
+    "MT101"
+  ],
+  "related": [
+    "pain.002",
+    "pacs.008",
+    "pain.007",
+    "camt.053"
+  ],
+  "summary": "A customer instructing its bank to make one or many credit transfers. The front door of the payments chain — what a corporate ERP or treasury system emits.",
+  "whenUsed": "Payroll runs, supplier payment files, treasury transfers, any batch a corporate sends its bank. The bank validates it, responds with a pain.002, then converts each payment into an interbank pacs.008. One pain.001 file routinely becomes hundreds of pacs.008 messages.",
+  "gotchas": [
+    "Three levels, and the middle one matters. Anything that is shared across a batch — debtor account, execution date, payment method, charge bearer — belongs at PaymentInformation, not repeated per transaction. Files that repeat it per transaction still validate but defeat the structure.",
+    "BatchBooking decides what the debtor's statement looks like: true gives one aggregated debit, false gives one entry per payment. Clients reconciling per invoice need false, and discovering this after go-live means reprocessing a month of statements.",
+    "RequestedExecutionDate is a request, not a promise. Submit after the cut-off, or on a non-business day, and the bank will move it — so never treat it as the settlement date for forecasting."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Unique per sending customer. Banks duplicate-check on it, so a resubmitted file needs a new id — this is the most common cause of a whole payroll file being silently ignored."
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Total transactions across all PaymentInformation blocks, not the number of blocks."
+    },
+    {
+      "path": "GrpHdr.CtrlSum",
+      "name": "Control Sum",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 1,
+      "note": "Sum of every instructed amount in the file, currency-agnostic. The cheapest guard against a truncated file — populate it."
+    },
+    {
+      "path": "GrpHdr.InitgPty",
+      "name": "Initiating Party",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Who sent the file. Often a shared-service centre or a payment factory, which is not necessarily the debtor on any individual payment."
+    },
+    {
+      "path": "GrpHdr.InitgPty.Nm",
+      "name": "Initiating Party Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InitgPty.Id",
+      "name": "Initiating Party Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Where the bank-assigned customer or file-sender id goes. Banks commonly require it for entitlement checks."
+    },
+    {
+      "path": "GrpHdr.FwdgAgt",
+      "name": "Forwarding Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "An agent relaying the file on the customer's behalf."
+    },
+    {
+      "path": "PmtInf",
+      "name": "Payment Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "A batch of payments sharing a debtor account, execution date and method. The level most implementations under-use."
+    },
+    {
+      "path": "PmtInf.PmtInfId",
+      "name": "Payment Information Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your reference for this batch. Appears in the pain.002 response, so make it meaningful."
+    },
+    {
+      "path": "PmtInf.PmtMtd",
+      "name": "Payment Method",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "PmtMtd",
+      "tier": 1,
+      "note": "TRF for credit transfers, CHK for cheques. Fixed for the whole batch."
+    },
+    {
+      "path": "PmtInf.BtchBookg",
+      "name": "Batch Booking",
+      "card": "[0..1]",
+      "type": "indicator",
+      "tier": 1,
+      "note": "true for a single aggregated debit on the statement, false for one entry per payment. Drives downstream reconciliation; agree it with the bank before go-live."
+    },
+    {
+      "path": "PmtInf.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Count within this batch only."
+    },
+    {
+      "path": "PmtInf.CtrlSum",
+      "name": "Control Sum",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.PmtTpInf",
+      "name": "Payment Type Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Can be set here for the whole batch or per transaction — but not both. Mixing levels is a frequent rejection cause."
+    },
+    {
+      "path": "PmtInf.PmtTpInf.InstrPrty",
+      "name": "Instruction Priority",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Prty",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.PmtTpInf.SvcLvl",
+      "name": "Service Level",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.PmtTpInf.SvcLvl.Cd",
+      "name": "Service Level Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "SvcLvl",
+      "tier": 1,
+      "note": "SEPA for euro area credit transfers, INST for instant rails."
+    },
+    {
+      "path": "PmtInf.PmtTpInf.LclInstrm",
+      "name": "Local Instrument",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.PmtTpInf.LclInstrm.Cd",
+      "name": "Local Instrument Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "LclInstrm",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.PmtTpInf.CtgyPurp",
+      "name": "Category Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.PmtTpInf.CtgyPurp.Cd",
+      "name": "Category Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "CtgyPurp",
+      "tier": 1,
+      "note": "SALA on a payroll batch is more than documentation — many banks use it to suppress the individual amounts from statements and reports visible to other staff."
+    },
+    {
+      "path": "PmtInf.ReqdExctnDt",
+      "name": "Requested Execution Date",
+      "card": "[1..1]",
+      "type": "date",
+      "tier": 1,
+      "note": "When the debtor wants the batch executed. Mandatory. Newer versions allow a date-time choice; some banks accept only the date form."
+    },
+    {
+      "path": "PmtInf.PoolgAdjstmntDt",
+      "name": "Pooling Adjustment Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 3
+    },
+    {
+      "path": "PmtInf.Dbtr",
+      "name": "Debtor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Whose account is debited for this whole batch."
+    },
+    {
+      "path": "PmtInf.Dbtr.Nm",
+      "name": "Debtor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.Dbtr.PstlAdr",
+      "name": "Debtor Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Use structured elements — the bank will copy whatever you send into the outbound pacs.008, where unstructured addresses are being rejected."
+    },
+    {
+      "path": "PmtInf.Dbtr.PstlAdr.StrtNm",
+      "name": "Street Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.Dbtr.PstlAdr.TwnNm",
+      "name": "Town Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.Dbtr.PstlAdr.Ctry",
+      "name": "Country",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.Dbtr.Id",
+      "name": "Debtor Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.DbtrAcct",
+      "name": "Debtor Account",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Mandatory at this level. One account per PaymentInformation block — paying from two accounts means two blocks."
+    },
+    {
+      "path": "PmtInf.DbtrAcct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.DbtrAcct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.DbtrAcct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.DbtrAcct.Id.Othr.Id",
+      "name": "Other Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.DbtrAcct.Ccy",
+      "name": "Account Currency",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Needed to disambiguate a multi-currency account."
+    },
+    {
+      "path": "PmtInf.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The bank being instructed."
+    },
+    {
+      "path": "PmtInf.DbtrAgt.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.DbtrAgt.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.ChrgBr",
+      "name": "Charge Bearer",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ChrgBr",
+      "tier": 1,
+      "note": "Set here for the batch. SLEV for SEPA; DEBT where the corporate wants beneficiaries to receive the full amount."
+    },
+    {
+      "path": "PmtInf.ChrgsAcct",
+      "name": "Charges Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Lets fees be debited to a separate account from the payments. Useful for cost-centre accounting."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf",
+      "name": "Credit Transfer Transaction Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One per individual payment."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.PmtId",
+      "name": "Payment Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.PmtId.InstrId",
+      "name": "Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your reference between you and your bank. Echoed in the pain.002, so this is how you match a rejection back to a row in your own ledger."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.PmtId.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Travels unchanged to the beneficiary. Put the invoice or payroll reference here — it is what makes the creditor's reconciliation automatic."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.PmtTpInf",
+      "name": "Payment Type Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Per-payment override. Only valid if the batch level did not set it."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Amt",
+      "name": "Amount",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "A choice: InstdAmt, or EqvtAmt for 'send this much in the beneficiary's currency from my account in mine'."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Amt.InstdAmt",
+      "name": "Instructed Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "The normal case. Currency as an attribute."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Amt.EqvtAmt",
+      "name": "Equivalent Amount",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Amount in one currency to be paid from an account in another, with the FX left to the bank."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.XchgRateInf",
+      "name": "Exchange Rate Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Where a pre-agreed rate or contract reference applies."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.XchgRateInf.XchgRate",
+      "name": "Exchange Rate",
+      "card": "[0..1]",
+      "type": "rate",
+      "tier": 3,
+      "note": "A rate the debtor is asserting rather than requesting. Only honoured where a deal already exists."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.XchgRateInf.CtrctId",
+      "name": "Contract Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "Reference of a pre-agreed FX contract, so the bank applies the dealt rate instead of the spot rate. The MT field 21F position."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.ChrgBr",
+      "name": "Charge Bearer",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ChrgBr",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.IntrmyAgt1",
+      "name": "Intermediary Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Only specify routing if you have a genuine reason; banks generally route better than their customers can."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAgt",
+      "name": "Creditor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The beneficiary's bank. Optional where the IBAN alone identifies it; required for most non-IBAN countries."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAgt.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr",
+      "name": "Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Optional in the schema, required by every bank in practice."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr.Nm",
+      "name": "Creditor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Must match the account holder's registered name. Confirmation-of-Payee checks reject on mismatch, and 140 characters is the ceiling."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr.PstlAdr",
+      "name": "Creditor Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr.PstlAdr.StrtNm",
+      "name": "Street Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr.PstlAdr.TwnNm",
+      "name": "Town Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+      "name": "Country",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Mandatory for cross-border; the single most-missed element in corporate files."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAcct",
+      "name": "Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAcct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAcct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "For Australia, BSB and account number concatenated, or split using the proprietary scheme name — check your bank's guide, as practice differs."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.CdtrAcct.Id.Othr.Id",
+      "name": "Other Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.UltmtCdtr",
+      "name": "Ultimate Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.InstrForCdtrAgt",
+      "name": "Instruction For Creditor Agent",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.InstrForDbtrAgt",
+      "name": "Instruction For Debtor Agent",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "Free text for your own bank. Usually requires a bilateral agreement to be acted on rather than ignored."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Purp",
+      "name": "Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.Purp.Cd",
+      "name": "Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Purp",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RgltryRptg",
+      "name": "Regulatory Reporting",
+      "card": "[0..10]",
+      "type": "group",
+      "tier": 3,
+      "note": "Required for cross-border payments in jurisdictions with exchange-control reporting."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RmtInf",
+      "name": "Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1,
+      "note": "140 characters per occurrence, and most rails will forward only the first one."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RmtInf.Strd",
+      "name": "Structured Remittance Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "Proper invoice-level detail. The right answer for payables, where supported."
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RmtInf.Strd.RfrdDocInf",
+      "name": "Referred Document Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.RmtInf.Strd.CdtrRefInf",
+      "name": "Creditor Reference Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "PmtInf.CdtTrfTxInf.SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pain.001.001.09\">",
+    "  <CstmrCdtTrfInitn>",
+    "    <GrpHdr>",
+    "      <MsgId>THORN-PAY-20261010-01</MsgId>",
+    "      <CreDtTm>2026-10-10T08:12:00+11:00</CreDtTm>",
+    "      <NbOfTxs>2</NbOfTxs>",
+    "      <CtrlSum>18250.00</CtrlSum>",
+    "      <InitgPty>",
+    "        <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "      </InitgPty>",
+    "    </GrpHdr>",
+    "    <PmtInf>",
+    "      <PmtInfId>THORN-BATCH-001</PmtInfId>",
+    "      <PmtMtd>TRF</PmtMtd>",
+    "      <BtchBookg>false</BtchBookg>",
+    "      <NbOfTxs>2</NbOfTxs>",
+    "      <CtrlSum>18250.00</CtrlSum>",
+    "      <PmtTpInf>",
+    "        <CtgyPurp>",
+    "          <Cd>SUPP</Cd>",
+    "        </CtgyPurp>",
+    "      </PmtTpInf>",
+    "      <ReqdExctnDt>",
+    "        <Dt>2026-10-13</Dt>",
+    "      </ReqdExctnDt>",
+    "      <Dbtr>",
+    "        <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "        <PstlAdr>",
+    "          <StrtNm>High Street</StrtNm>",
+    "          <BldgNb>412</BldgNb>",
+    "          <PstCd>3071</PstCd>",
+    "          <TwnNm>Thornbury</TwnNm>",
+    "          <Ctry>AU</Ctry>",
+    "        </PstlAdr>",
+    "      </Dbtr>",
+    "      <DbtrAcct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>083004123456789</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "        <Ccy>AUD</Ccy>",
+    "      </DbtrAcct>",
+    "      <DbtrAgt>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKAAU3MXXX</BICFI>",
+    "        </FinInstnId>",
+    "      </DbtrAgt>",
+    "      <ChrgBr>DEBT</ChrgBr>",
+    "      <CdtTrfTxInf>",
+    "        <PmtId>",
+    "          <InstrId>ROW-0001</InstrId>",
+    "          <EndToEndId>INV-2026-4471</EndToEndId>",
+    "        </PmtId>",
+    "        <Amt>",
+    "          <InstdAmt Ccy=\"AUD\">15750.00</InstdAmt>",
+    "        </Amt>",
+    "        <CdtrAgt>",
+    "          <FinInstnId>",
+    "            <BICFI>BNKBAU2SXXX</BICFI>",
+    "          </FinInstnId>",
+    "        </CdtrAgt>",
+    "        <Cdtr>",
+    "          <Nm>Riverina Timber Supplies</Nm>",
+    "          <PstlAdr>",
+    "            <TwnNm>Wagga Wagga</TwnNm>",
+    "            <Ctry>AU</Ctry>",
+    "          </PstlAdr>",
+    "        </Cdtr>",
+    "        <CdtrAcct>",
+    "          <Id>",
+    "            <Othr>",
+    "              <Id>650000987654321</Id>",
+    "            </Othr>",
+    "          </Id>",
+    "        </CdtrAcct>",
+    "        <RmtInf>",
+    "          <Ustrd>Invoice INV-2026-4471 hardwood order</Ustrd>",
+    "        </RmtInf>",
+    "      </CdtTrfTxInf>",
+    "      <CdtTrfTxInf>",
+    "        <PmtId>",
+    "          <InstrId>ROW-0002</InstrId>",
+    "          <EndToEndId>INV-2026-4472</EndToEndId>",
+    "        </PmtId>",
+    "        <Amt>",
+    "          <InstdAmt Ccy=\"AUD\">2500.00</InstdAmt>",
+    "        </Amt>",
+    "        <Cdtr>",
+    "          <Nm>Preston Fixings Co</Nm>",
+    "          <PstlAdr>",
+    "            <TwnNm>Preston</TwnNm>",
+    "            <Ctry>AU</Ctry>",
+    "          </PstlAdr>",
+    "        </Cdtr>",
+    "        <CdtrAcct>",
+    "          <Id>",
+    "            <Othr>",
+    "              <Id>013010555444333</Id>",
+    "            </Othr>",
+    "          </Id>",
+    "        </CdtrAcct>",
+    "        <RmtInf>",
+    "          <Ustrd>Invoice INV-2026-4472</Ustrd>",
+    "        </RmtInf>",
+    "      </CdtTrfTxInf>",
+    "    </PmtInf>",
+    "  </CstmrCdtTrfInitn>",
+    "</Document>"
+  ]
+}

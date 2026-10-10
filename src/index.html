@@ -1,0 +1,1403 @@
+<meta charset="utf-8">
+<title>ISO 20022 payments explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive encyclopedia of ISO 20022 payments messages: pain, pacs, camt, remt and head — fields, codes, MT equivalents and scheme variants.">
+
+<style>
+:root {
+  --paper: #eef1f2;
+  --paper-raised: #f7f9f9;
+  --paper-sunken: #e4e9ea;
+  --ink: #141a1c;
+  --ink-soft: #46565a;
+  --ink-faint: #76878b;
+  --rule: #d2d9da;
+  --rule-strong: #b6c0c2;
+  --accent: #0e5a56;
+  --accent-wash: #0e5a561a;
+  --forbid: #9b2c2c;
+  --forbid-wash: #9b2c2c14;
+  --restrict: #8a6a14;
+  --restrict-wash: #8a6a1414;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Mono", "Roboto Mono", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --tier2: 0.82;
+  --tier3: 0.6;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0d1214;
+    --paper-raised: #151d1f;
+    --paper-sunken: #080c0d;
+    --ink: #e4e9ea;
+    --ink-soft: #a3b1b4;
+    --ink-faint: #74858a;
+    --rule: #263135;
+    --rule-strong: #3a4a4f;
+    --accent: #4fb3ac;
+    --accent-wash: #4fb3ac1f;
+    --forbid: #e08585;
+    --forbid-wash: #e0858518;
+    --restrict: #d4ad52;
+    --restrict-wash: #d4ad5218;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="light"] {
+  --paper: #eef1f2; --paper-raised: #f7f9f9; --paper-sunken: #e4e9ea;
+  --ink: #141a1c; --ink-soft: #46565a; --ink-faint: #76878b;
+  --rule: #d2d9da; --rule-strong: #b6c0c2;
+  --accent: #0e5a56; --accent-wash: #0e5a561a;
+  --forbid: #9b2c2c; --forbid-wash: #9b2c2c14;
+  --restrict: #8a6a14; --restrict-wash: #8a6a1414;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --paper: #0d1214; --paper-raised: #151d1f; --paper-sunken: #080c0d;
+  --ink: #e4e9ea; --ink-soft: #a3b1b4; --ink-faint: #74858a;
+  --rule: #263135; --rule-strong: #3a4a4f;
+  --accent: #4fb3ac; --accent-wash: #4fb3ac1f;
+  --forbid: #e08585; --forbid-wash: #e0858518;
+  --restrict: #d4ad52; --restrict-wash: #d4ad5218;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent); }
+
+.skiplink {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--accent); color: var(--paper-raised);
+  padding: 0.6rem 1rem; font: 600 0.8rem/1 var(--mono);
+}
+.skiplink:focus { left: 0; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- eyebrow label, used throughout ---------- */
+.eyebrow {
+  font: 600 0.66rem/1.2 var(--mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.6rem 1rem;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+
+.brand {
+  font: 600 0.84rem/1 var(--mono);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand span { color: var(--accent); }
+
+.searchwrap { position: relative; flex: 1 1 15rem; min-width: 12rem; }
+
+#search {
+  width: 100%;
+  font: 400 0.82rem/1 var(--mono);
+  padding: 0.5rem 0.6rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+}
+#search::placeholder { color: var(--ink-faint); }
+
+.results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  max-height: 24rem; overflow-y: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  display: none;
+}
+.results[data-open="1"] { display: block; }
+
+.results-group {
+  padding: 0.45rem 0.6rem 0.2rem;
+  border-top: 1px solid var(--rule);
+}
+.results-group:first-child { border-top: 0; }
+
+.hit {
+  display: block; width: 100%; text-align: left;
+  padding: 0.35rem 0.6rem;
+  background: none; border: 0; border-radius: 3px;
+  color: var(--ink); cursor: pointer;
+  font: 400 0.78rem/1.4 var(--mono);
+}
+.hit:hover, .hit[aria-selected="true"] { background: var(--accent-wash); }
+.hit b { color: var(--accent); font-weight: 600; }
+.hit em { font-style: normal; color: var(--ink-faint); }
+
+.ctrl {
+  font: 400 0.76rem/1 var(--mono);
+  padding: 0.45rem 0.5rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
+.backlink {
+  font: 400 0.74rem/1 var(--mono);
+  color: var(--ink-faint);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.backlink:hover { color: var(--accent); }
+
+/* ---------- shell ---------- */
+.shell {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  align-items: start;
+  max-width: 94rem;
+  margin: 0 auto;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar {
+  position: sticky; top: 3.1rem;
+  max-height: calc(100vh - 3.1rem);
+  overflow-y: auto;
+  padding: 1.1rem 0.6rem 2rem;
+  border-right: 1px solid var(--rule);
+}
+
+.domain { margin-bottom: 1.1rem; }
+.domain > .eyebrow { display: block; padding: 0 0.5rem 0.4rem; }
+
+.navitem {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  width: 100%; text-align: left;
+  padding: 0.3rem 0.5rem;
+  background: none; border: 0; border-left: 2px solid transparent;
+  border-radius: 0 3px 3px 0;
+  color: var(--ink-soft); cursor: pointer;
+}
+.navitem:hover { background: var(--accent-wash); color: var(--ink); }
+.navitem[aria-current="true"] {
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+.navitem-id {
+  font: 600 0.78rem/1.4 var(--mono);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.navitem-label {
+  font-size: 0.7rem; line-height: 1.3;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------- main ---------- */
+.main { padding: 1.6rem clamp(1rem, 3vw, 2.4rem) 4rem; min-width: 0; }
+
+/* Signature: the message id carries a misregistered carbon-copy behind it,
+   the way a relayed payment exists as a copy at every hop. */
+#msghead > .eyebrow { display: block; }
+
+.msgid {
+  position: relative;
+  display: inline-block;
+  font: 600 clamp(2.1rem, 6vw, 3.5rem)/1 var(--mono);
+  letter-spacing: -0.045em;
+  margin: 0.3rem 0 0;
+}
+.msgid::before {
+  content: attr(data-copy);
+  position: absolute; left: 0.085em; top: 0.075em;
+  color: var(--accent);
+  opacity: 0.22;
+  z-index: 0;
+  pointer-events: none;
+}
+.msgid-main { position: relative; z-index: 1; }
+.msgid-ver {
+  position: relative; z-index: 1;
+  font-size: 0.4em; font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  vertical-align: baseline;
+}
+
+.msgname {
+  font: 400 0.8rem/1.4 var(--mono);
+  color: var(--ink-soft);
+  margin: 0.5rem 0 0;
+}
+
+.msgmeta {
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem;
+  margin: 0.9rem 0 0;
+  font: 400 0.76rem/1.4 var(--mono);
+  color: var(--ink-soft);
+}
+.msgmeta .eyebrow { margin-right: 0.35rem; }
+
+/* ---------- tabs ---------- */
+.tabs {
+  display: flex; gap: 0.15rem;
+  margin: 1.5rem 0 0;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+.tab {
+  font: 500 0.78rem/1 var(--mono);
+  letter-spacing: 0.02em;
+  padding: 0.6rem 0.85rem;
+  background: none; border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-faint); cursor: pointer; white-space: nowrap;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+.panel { padding-top: 1.5rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel { animation: rise 0.16s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+}
+
+/* ---------- prose ---------- */
+.prose { max-width: 62ch; }
+.prose p { margin: 0 0 0.9rem; }
+.lede { font-size: 1.02rem; color: var(--ink); }
+
+.block { margin: 0 0 2rem; }
+.block > .eyebrow { display: block; margin-bottom: 0.55rem; }
+
+.notelist { margin: 0; padding: 0; list-style: none; max-width: 70ch; }
+.notelist li {
+  position: relative;
+  padding: 0 0 0 1.5rem;
+  margin-bottom: 0.7rem;
+  color: var(--ink-soft);
+}
+.notelist li::before {
+  content: "!";
+  position: absolute; left: 0; top: 0.1rem;
+  font: 600 0.74rem/1.5 var(--mono);
+  color: var(--restrict);
+}
+
+/* ---------- hop chain: a real sequence, so arrows carry meaning ---------- */
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.hop {
+  font: 500 0.78rem/1 var(--mono);
+  padding: 0.35rem 0.55rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  color: var(--ink); cursor: pointer;
+}
+.hop:hover { border-color: var(--accent); color: var(--accent); }
+.hop[data-self="1"] { background: var(--accent); border-color: var(--accent); color: var(--paper-raised); cursor: default; }
+.chain-arrow { color: var(--ink-faint); font: 400 0.78rem/1 var(--mono); }
+
+/* ---------- toolbar above the field tree ---------- */
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+.seg { display: flex; border: 1px solid var(--rule-strong); border-radius: 3px; overflow: hidden; }
+.seg button {
+  font: 400 0.72rem/1 var(--mono);
+  padding: 0.4rem 0.6rem;
+  background: var(--paper); border: 0; border-left: 1px solid var(--rule);
+  color: var(--ink-soft); cursor: pointer;
+}
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--paper-raised); }
+.checkline { display: flex; align-items: center; gap: 0.4rem; font: 400 0.74rem/1 var(--mono); color: var(--ink-soft); cursor: pointer; }
+.toolbar-count { font: 400 0.72rem/1 var(--mono); color: var(--ink-faint); margin-left: auto; }
+
+.caveat {
+  margin: 0 0 1.2rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 2px solid var(--restrict);
+  background: var(--restrict-wash);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  max-width: 76ch;
+}
+
+/* ---------- field tree ---------- */
+.tree { margin: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--rule);
+  cursor: default;
+}
+.row:hover { background: var(--paper-raised); }
+.row[data-hot="1"] { background: var(--accent-wash); }
+.row[data-tier="2"] { opacity: var(--tier2); }
+.row[data-tier="3"] { opacity: var(--tier3); }
+.row[data-group="1"] .row-leaf { color: var(--ink); }
+
+.row-path { font: 400 0.78rem/1.5 var(--mono); word-break: break-word; }
+.row-anc { color: var(--ink-faint); }
+.row-leaf { font-weight: 600; letter-spacing: -0.01em; }
+.row-name { font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.05rem; }
+.row-note { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.3rem; max-width: 72ch; }
+.row-card {
+  font: 400 0.72rem/1.6 var(--mono);
+  color: var(--ink-faint);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.badges { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
+.badge {
+  font: 600 0.64rem/1 var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.25rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+.badge[data-usage="mandatory"] { color: var(--accent); background: var(--accent-wash); }
+.badge[data-usage="forbidden"] { color: var(--forbid); background: var(--forbid-wash); }
+.badge[data-usage="restricted"] { color: var(--restrict); background: var(--restrict-wash); }
+.badge-note { font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.25rem; max-width: 72ch; }
+.conflict {
+  font: 600 0.64rem/1 var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--forbid);
+}
+
+/* codelist disclosure inside a row */
+.codes { margin-top: 0.45rem; }
+.codes summary {
+  font: 400 0.74rem/1 var(--mono);
+  color: var(--accent); cursor: pointer; display: inline-block;
+}
+.codetable { margin: 0.5rem 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2rem 0.8rem; }
+.codetable dt { font: 600 0.74rem/1.5 var(--mono); color: var(--ink); }
+.codetable dd { margin: 0; font-size: 0.78rem; color: var(--ink-soft); line-height: 1.5; }
+.codes-head { font-size: 0.74rem; color: var(--ink-faint); margin: 0.4rem 0 0; }
+
+/* ---------- sample xml ---------- */
+.samplewrap {
+  overflow-x: auto;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+.sample { margin: 0; padding: 0.8rem 0; min-width: max-content; }
+.xline {
+  display: block;
+  padding: 0 1rem;
+  font: 400 0.78rem/1.6 var(--mono);
+  white-space: pre;
+  color: var(--ink-soft);
+}
+.xline[data-field] { cursor: pointer; }
+.xline[data-field]:hover, .xline[data-hot="1"] { background: var(--accent-wash); color: var(--ink); }
+.xtag { color: var(--accent); }
+.xval { color: var(--ink); font-weight: 600; }
+
+/* ---------- mt mapping ---------- */
+.maptable { width: 100%; min-width: 48rem; border-collapse: collapse; }
+.maptable caption {
+  text-align: left; padding-bottom: 0.6rem;
+  font-size: 0.82rem; color: var(--ink-soft); max-width: 72ch;
+}
+.maptable th {
+  text-align: left; padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--rule-strong);
+  font: 600 0.66rem/1.2 var(--mono);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.maptable td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.maptable tr:hover td { background: var(--paper-raised); }
+.mt-tag { font: 600 0.8rem/1.5 var(--mono); color: var(--ink); white-space: nowrap; }
+.mt-name { font-size: 0.74rem; color: var(--ink-faint); }
+.mx-path { font: 400 0.76rem/1.5 var(--mono); color: var(--ink); white-space: nowrap; }
+.gap { color: var(--forbid); font: 600 0.74rem/1.5 var(--mono); }
+.tablescroll { overflow-x: auto; }
+
+.empty { color: var(--ink-faint); font-size: 0.86rem; max-width: 60ch; }
+.empty code { font: 400 0.8rem/1 var(--mono); color: var(--accent); }
+
+/* ---------- footer ---------- */
+.foot {
+  border-top: 1px solid var(--rule);
+  padding: 1.4rem clamp(1rem, 3vw, 2.4rem);
+  max-width: 94rem; margin: 0 auto;
+  font-size: 0.76rem; color: var(--ink-faint);
+}
+.foot p { margin: 0 0 0.5rem; max-width: 76ch; }
+.foot-stats { font-family: var(--mono); font-size: 0.72rem; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 54rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .sidebar {
+    position: static; max-height: none;
+    border-right: 0; border-bottom: 1px solid var(--rule);
+    padding: 0.8rem 0.6rem;
+    display: flex; gap: 1rem; overflow-x: auto;
+  }
+  .domain { margin: 0; min-width: 11rem; }
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .row-card { text-align: left; }
+  .topbar-right { width: 100%; margin-left: 0; }
+}
+</style>
+
+<a class="skiplink" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a class="brand" href="#" aria-label="ISO 20022 payments explorer home">ISO&nbsp;20022 <span>payments</span></a>
+
+  <div class="searchwrap">
+    <input id="search" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search messages, fields, codes  ( / )"
+           aria-label="Search messages, fields and codes"
+           role="combobox" aria-expanded="false" aria-controls="results">
+    <div class="results" id="results" role="listbox" aria-label="Search results"></div>
+  </div>
+
+  <div class="topbar-right">
+    <label class="eyebrow" for="scheme">Scheme</label>
+    <select class="ctrl" id="scheme" aria-label="Scheme overlay"></select>
+    <button class="ctrl" id="theme" type="button" aria-label="Switch theme">Theme</button>
+    <a class="backlink" href="https://nnavnita.com">&larr;&nbsp;nnavnita.com</a>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar" aria-label="Messages"></nav>
+  <main class="main" id="main" tabindex="-1">
+    <header id="msghead"></header>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Message views"></div>
+    <div class="panel" id="panel" role="tabpanel"></div>
+  </main>
+</div>
+
+<footer class="foot">
+  <p class="foot-stats" id="footstats"></p>
+  <p>Field notes and summaries are hand-written explanation, not a reproduction of the ISO 20022 e-Repository. Message identifiers and element names follow the published standard; for authoritative, exhaustive definitions go to <a href="https://www.iso20022.org">iso20022.org</a>. Corrections welcome on <a href="https://github.com/nnavnita/iso20022">GitHub</a>.</p>
+</footer>
+
+<!--ISO_DATA-->
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = window.ISO_DATA;
+  var TABS = [
+    { id: "overview", label: "Overview" },
+    { id: "fields", label: "Fields" },
+    { id: "sample", label: "Sample XML" },
+    { id: "mt", label: "MT ↔ MX" }
+  ];
+
+  if (!DATA) {
+    document.getElementById("panel").innerHTML =
+      '<p class="empty">No data loaded. Run <code>python3 build.py</code> and open ' +
+      '<code>dist/index.html</code> &mdash; this file in <code>src/</code> is the ' +
+      'template, and its data is inlined at build time.</p>';
+    return;
+  }
+
+  var byShort = {};
+  DATA.messages.forEach(function (m) { byShort[m.short] = m; });
+
+  // MT types that target a given message, so the MT tab can be built from either side.
+  var mtByMessage = {};
+  Object.keys(DATA.mtMapping).forEach(function (mt) {
+    (DATA.mtMapping[mt].mxAll || [DATA.mtMapping[mt].mxShort]).forEach(function (short) {
+      (mtByMessage[short] = mtByMessage[short] || []).push(mt);
+    });
+  });
+
+  var state = {
+    message: DATA.messages[0].short,
+    tab: "overview",
+    scheme: "",
+    tier: 2,          // show tier <= this
+    changedOnly: false,
+    hot: null         // field path currently cross-highlighted
+  };
+
+  /* ---------- helpers ---------- */
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function overlayFor(short, path) {
+    if (!state.scheme) return null;
+    var scheme = DATA.schemes[state.scheme];
+    var forMsg = scheme && scheme[short];
+    return (forMsg && forMsg[path]) || null;
+  }
+
+  function overlayCount(short) {
+    if (!state.scheme) return 0;
+    var scheme = DATA.schemes[state.scheme];
+    var forMsg = scheme && scheme[short];
+    return forMsg ? Object.keys(forMsg).length : 0;
+  }
+
+  /* A scheme marking a field forbidden that base ISO makes mandatory is a
+     contradiction rather than a restriction. Surface it instead of silently
+     trusting one source over the other — the reader needs to know the data
+     disagrees, and which way. */
+  function isConflict(field, rule) {
+    return !!rule && rule.usage === "forbidden" && /^\[1/.test(field.card);
+  }
+
+  /* ---------- sidebar ---------- */
+
+  function renderSidebar() {
+    var nav = document.getElementById("sidebar");
+    nav.innerHTML = "";
+
+    DATA.meta.domainOrder.forEach(function (domain) {
+      var msgs = DATA.messages.filter(function (m) { return m.domain === domain; });
+      if (!msgs.length) return;
+
+      var group = el("div", "domain");
+      group.appendChild(el("span", "eyebrow", DATA.meta.domainLabels[domain]));
+
+      msgs.forEach(function (m) {
+        var btn = el("button", "navitem");
+        btn.type = "button";
+        btn.setAttribute("aria-current", m.short === state.message ? "true" : "false");
+        btn.appendChild(el("span", "navitem-id", m.short));
+        btn.appendChild(el("span", "navitem-label", m.label));
+        btn.addEventListener("click", function () { go(m.short, state.tab); });
+        group.appendChild(btn);
+      });
+
+      nav.appendChild(group);
+    });
+  }
+
+  /* ---------- message header ---------- */
+
+  function renderHead() {
+    var m = byShort[state.message];
+    var head = document.getElementById("msghead");
+    head.innerHTML = "";
+
+    head.appendChild(el("span", "eyebrow", m.label));
+
+    // "pacs.008" large, ".001.08" trailing small — the way people say it aloud.
+    var rest = m.id.slice(m.short.length);
+    var h1 = el("h1", "msgid");
+    h1.setAttribute("data-copy", m.short);
+    h1.appendChild(el("span", "msgid-main", m.short));
+    h1.appendChild(el("span", "msgid-ver", rest));
+    head.appendChild(h1);
+
+    head.appendChild(el("p", "msgname", m.name));
+
+    var meta = el("div", "msgmeta");
+    function pair(label, value) {
+      var wrap = el("span");
+      wrap.appendChild(el("span", "eyebrow", label));
+      wrap.appendChild(el("span", null, value));
+      meta.appendChild(wrap);
+    }
+    pair("Direction", m.direction);
+    pair("Fields", String(m.fields.length));
+    if (m.mtEquivalent && m.mtEquivalent.length) pair("Legacy MT", m.mtEquivalent.join(", "));
+    if (state.scheme) {
+      var n = overlayCount(m.short);
+      pair(state.scheme, n ? n + (n === 1 ? " field changed" : " fields changed") : "no changes");
+    }
+    head.appendChild(meta);
+  }
+
+  /* ---------- tabs ---------- */
+
+  function renderTabs() {
+    var wrap = document.getElementById("tabs");
+    wrap.innerHTML = "";
+    TABS.forEach(function (t) {
+      var btn = el("button", "tab", t.label);
+      btn.type = "button";
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", t.id === state.tab ? "true" : "false");
+      btn.addEventListener("click", function () { go(state.message, t.id); });
+      wrap.appendChild(btn);
+    });
+  }
+
+  /* ---------- overview ---------- */
+
+  function renderOverview(m) {
+    var frag = document.createDocumentFragment();
+
+    var intro = el("div", "block prose");
+    intro.appendChild(el("p", "lede", m.summary));
+    if (m.whenUsed) intro.appendChild(el("p", null, m.whenUsed));
+    frag.appendChild(intro);
+
+    if (m.gotchas && m.gotchas.length) {
+      var g = el("div", "block");
+      g.appendChild(el("span", "eyebrow", "Where this goes wrong"));
+      var ul = el("ul", "notelist");
+      m.gotchas.forEach(function (t) { ul.appendChild(el("li", null, t)); });
+      g.appendChild(ul);
+      frag.appendChild(g);
+    }
+
+    if (m.related && m.related.length) {
+      var chainBlock = el("div", "block");
+      chainBlock.appendChild(el("span", "eyebrow", "Messages it travels with"));
+      var chain = el("div", "chain");
+      var hops = [m.short].concat(m.related.filter(function (r) { return r !== m.short; }));
+      hops.forEach(function (short, i) {
+        if (i) chain.appendChild(el("span", "chain-arrow", "→"));
+        var hop = el("button", "hop", short);
+        hop.type = "button";
+        if (short === m.short) {
+          hop.setAttribute("data-self", "1");
+          hop.disabled = true;
+        } else if (!byShort[short]) {
+          hop.disabled = true;
+          hop.title = "Not covered yet";
+        } else {
+          hop.addEventListener("click", function () { go(short, "overview"); });
+        }
+        chain.appendChild(hop);
+      });
+      chainBlock.appendChild(chain);
+      frag.appendChild(chainBlock);
+    }
+
+    if (state.scheme) {
+      var scheme = DATA.schemes[state.scheme];
+      var sb = el("div", "block");
+      sb.appendChild(el("span", "eyebrow", state.scheme));
+      var p = el("p", "prose", scheme.scope);
+      sb.appendChild(p);
+      if (scheme.caveat) sb.appendChild(el("p", "caveat", scheme.caveat));
+      frag.appendChild(sb);
+    }
+
+    return frag;
+  }
+
+  /* ---------- fields ---------- */
+
+  function renderFields(m) {
+    var frag = document.createDocumentFragment();
+    var shown = m.fields.filter(function (f) {
+      if (f.tier > state.tier) return false;
+      if (state.changedOnly && !overlayFor(m.short, f.path)) return false;
+      return true;
+    });
+
+    frag.appendChild(fieldToolbar(m, shown.length));
+
+    if (state.scheme && DATA.schemes[state.scheme].caveat) {
+      frag.appendChild(el("p", "caveat", DATA.schemes[state.scheme].caveat));
+    }
+
+    if (!shown.length) {
+      frag.appendChild(el("p", "empty",
+        state.changedOnly
+          ? state.scheme + " does not change any field on " + m.short + " at this tier."
+          : "No fields at this tier."));
+      return frag;
+    }
+
+    var tree = el("div", "tree");
+    shown.forEach(function (f) { tree.appendChild(fieldRow(m, f)); });
+    frag.appendChild(tree);
+    return frag;
+  }
+
+  function fieldToolbar(m, count) {
+    var bar = el("div", "toolbar");
+
+    var tierLabel = el("span", "eyebrow", "Detail");
+    bar.appendChild(tierLabel);
+
+    var seg = el("div", "seg");
+    [[1, "Core"], [2, "+ situational"], [3, "Everything"]].forEach(function (pair) {
+      var btn = el("button", null, pair[1]);
+      btn.type = "button";
+      btn.setAttribute("aria-pressed", state.tier === pair[0] ? "true" : "false");
+      btn.addEventListener("click", function () {
+        state.tier = pair[0];
+        renderPanel();
+      });
+      seg.appendChild(btn);
+    });
+    bar.appendChild(seg);
+
+    if (state.scheme) {
+      var label = el("label", "checkline");
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = state.changedOnly;
+      box.addEventListener("change", function () {
+        state.changedOnly = box.checked;
+        renderPanel();
+      });
+      label.appendChild(box);
+      label.appendChild(document.createTextNode("Only " + state.scheme + " changes"));
+      bar.appendChild(label);
+    }
+
+    bar.appendChild(el("span", "toolbar-count",
+      count + " of " + m.fields.length + " fields"));
+    return bar;
+  }
+
+  function fieldRow(m, f) {
+    var row = el("div", "row");
+    row.setAttribute("data-tier", String(f.tier));
+    row.setAttribute("data-path", f.path);
+    if (f.type === "group") row.setAttribute("data-group", "1");
+    if (state.hot === f.path) row.setAttribute("data-hot", "1");
+
+    var left = el("div");
+
+    // Full path for context, leaf emphasised — you need both at once.
+    var segs = f.path.split(".");
+    var leaf = segs.pop();
+    var pathEl = el("div", "row-path");
+    if (segs.length) pathEl.appendChild(el("span", "row-anc", segs.join(".") + "."));
+    pathEl.appendChild(el("span", "row-leaf", leaf));
+    left.appendChild(pathEl);
+
+    left.appendChild(el("div", "row-name", f.name));
+    if (f.note) left.appendChild(el("div", "row-note", f.note));
+
+    var rule = overlayFor(m.short, f.path);
+    if (rule) {
+      var badges = el("div", "badges");
+      var badge = el("span", "badge", rule.usage);
+      badge.setAttribute("data-usage", rule.usage);
+      badges.appendChild(badge);
+      if (rule.allowed) {
+        badges.appendChild(el("span", "badge", rule.allowed.join(" / ")));
+      }
+      if (isConflict(f, rule)) {
+        badges.appendChild(el("span", "conflict",
+          "conflicts with base " + f.card));
+      }
+      left.appendChild(badges);
+      if (rule.note) left.appendChild(el("div", "badge-note", rule.note));
+    }
+
+    if (f.codelist) left.appendChild(codelistDisclosure(f.codelist, rule));
+
+    row.appendChild(left);
+    row.appendChild(el("div", "row-card", f.card));
+
+    row.addEventListener("mouseenter", function () { setHot(f.path); });
+    row.addEventListener("mouseleave", function () { setHot(null); });
+    return row;
+  }
+
+  function codelistDisclosure(id, rule) {
+    var list = DATA.codelists[id];
+    var allowed = rule && rule.allowed ? rule.allowed : null;
+    var codes = Object.keys(list.codes).filter(function (c) {
+      return !allowed || allowed.indexOf(c) !== -1;
+    });
+
+    var details = el("details", "codes");
+    var summary = el("summary", null,
+      list.name + " — " + codes.length + (allowed ? " permitted" : "") + " codes");
+    details.appendChild(summary);
+
+    var head = el("p", "codes-head",
+      (list.kind === "external"
+        ? "External code set, published separately by ISO and revised periodically."
+        : "Internal code set, fixed in the schema.") +
+      (list.schemaType ? " " + list.schemaType + "." : ""));
+    details.appendChild(head);
+    if (list.note) details.appendChild(el("p", "codes-head", list.note));
+
+    var dl = el("dl", "codetable");
+    codes.forEach(function (c) {
+      dl.appendChild(el("dt", null, c));
+      dl.appendChild(el("dd", null, list.codes[c]));
+    });
+    details.appendChild(dl);
+    return details;
+  }
+
+  /* ---------- sample xml ---------- */
+
+  /* Walk the sample tracking open and close tags, so each line knows its own
+     element path. Matching a field by suffix handles both Document-rooted
+     payloads and the bare AppHdr of head.001 without special-casing either. */
+  function annotateSample(m) {
+    var lines = (m.sample || "").split("\n");
+    var stack = [];
+    var paths = m.fields.map(function (f) { return f.path; });
+
+    return lines.map(function (line) {
+      var trimmed = line.trim();
+      var open = /^<([A-Za-z][\w.]*)(\s[^>]*)?>/.exec(trimmed);
+      var close = /^<\/([A-Za-z][\w.]*)>/.exec(trimmed);
+      var selfClosed = open && new RegExp("</" + open[1] + ">$").test(trimmed);
+      var here = null;
+
+      if (close) {
+        stack.pop();
+      } else if (open) {
+        stack.push(open[1]);
+        here = stack.slice();
+        if (selfClosed) stack.pop();
+      }
+
+      var field = null;
+      if (here) {
+        var joined = here.join(".");
+        for (var i = 0; i < paths.length; i++) {
+          if (joined === paths[i] || joined.slice(-(paths[i].length + 1)) === "." + paths[i]) {
+            field = paths[i];
+            break;
+          }
+        }
+      }
+      return { text: line, field: field };
+    });
+  }
+
+  function renderSample(m) {
+    if (!m.sample) {
+      return el("p", "empty", "No sample document for " + m.short + " yet.");
+    }
+
+    var frag = document.createDocumentFragment();
+    var hint = el("p", "prose");
+    hint.appendChild(document.createTextNode(
+      "Hover a line to highlight the matching field, or a field row in the Fields tab " +
+      "to highlight the matching line. Reading the table and reading real XML are " +
+      "different skills; the mapping between them is the part usually missing."));
+    frag.appendChild(hint);
+
+    var wrap = el("div", "samplewrap");
+    var pre = el("pre", "sample");
+
+    annotateSample(m).forEach(function (line) {
+      var code = el("code", "xline");
+      code.innerHTML = highlight(line.text);
+      if (line.field) {
+        code.setAttribute("data-field", line.field);
+        if (state.hot === line.field) code.setAttribute("data-hot", "1");
+        code.addEventListener("mouseenter", function () { setHot(line.field); });
+        code.addEventListener("mouseleave", function () { setHot(null); });
+        code.addEventListener("click", function () { go(m.short, "fields", line.field); });
+      }
+      pre.appendChild(code);
+    });
+
+    wrap.appendChild(pre);
+    frag.appendChild(wrap);
+    return frag;
+  }
+
+  function highlight(line) {
+    return esc(line)
+      .replace(/(&lt;\/?)([A-Za-z][\w.]*)/g, '$1<span class="xtag">$2</span>')
+      .replace(/(&gt;)([^&]+)(&lt;)/g, '$1<span class="xval">$2</span>$3');
+  }
+
+  /* ---------- mt mapping ---------- */
+
+  function renderMt(m) {
+    var types = mtByMessage[m.short] || [];
+    if (!types.length) {
+      return el("p", "empty", m.mtNote ||
+        (m.short + " has no legacy MT equivalent. It is one of the messages ISO 20022 " +
+         "added rather than replaced."));
+    }
+
+    var frag = document.createDocumentFragment();
+    types.forEach(function (mt) {
+      var map = DATA.mtMapping[mt];
+      var block = el("div", "block");
+      block.appendChild(el("span", "eyebrow", mt + " → " + map.mx));
+
+      var scroll = el("div", "tablescroll");
+      var table = el("table", "maptable");
+      var caption = el("caption");
+      caption.appendChild(document.createTextNode(map.name + ". " + map.note));
+      table.appendChild(caption);
+
+      var thead = el("thead");
+      var hrow = el("tr");
+      ["MT field", "ISO 20022 path", "Notes"].forEach(function (h) {
+        hrow.appendChild(el("th", null, h));
+      });
+      thead.appendChild(hrow);
+      table.appendChild(thead);
+
+      var tbody = el("tbody");
+      map.fields.forEach(function (pair) {
+        var tr = el("tr");
+
+        var mtCell = el("td");
+        if (pair.mt) {
+          mtCell.appendChild(el("div", "mt-tag", ":" + pair.mt + ":"));
+        } else {
+          mtCell.appendChild(el("div", "gap", "no MT"));
+        }
+        mtCell.appendChild(el("div", "mt-name", pair.mtName));
+        tr.appendChild(mtCell);
+
+        var mxCell = el("td");
+        if (pair.mx) {
+          mxCell.appendChild(el("div", "mx-path", pair.mx));
+        } else {
+          mxCell.appendChild(el("div", "gap", "no MX equivalent"));
+        }
+        tr.appendChild(mxCell);
+
+        tr.appendChild(el("td", null, pair.note || ""));
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      scroll.appendChild(table);
+      block.appendChild(scroll);
+      frag.appendChild(block);
+    });
+    return frag;
+  }
+
+  /* ---------- cross-highlight ---------- */
+
+  function setHot(path) {
+    state.hot = path;
+    var nodes = document.querySelectorAll("[data-path], .xline[data-field]");
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      var own = n.getAttribute("data-path") || n.getAttribute("data-field");
+      if (path && own === path) n.setAttribute("data-hot", "1");
+      else n.removeAttribute("data-hot");
+    }
+  }
+
+  /* ---------- search ---------- */
+
+  var index = buildIndex();
+
+  function buildIndex() {
+    var messages = DATA.messages.map(function (m) {
+      return {
+        kind: "message",
+        key: m.short,
+        title: m.short,
+        sub: m.label + (m.mtEquivalent && m.mtEquivalent.length ? "  ·  " + m.mtEquivalent.join(", ") : ""),
+        hay: (m.short + " " + m.id + " " + m.name + " " + m.label + " " + m.summary + " " +
+              (m.mtEquivalent || []).join(" ")).toLowerCase()
+      };
+    });
+
+    // One entry per distinct field path, listing every message it appears in —
+    // "where does ChrgBr show up" is the question people actually ask.
+    var fieldMap = {};
+    DATA.messages.forEach(function (m) {
+      m.fields.forEach(function (f) {
+        var e = fieldMap[f.path] || (fieldMap[f.path] = { name: f.name, msgs: [] });
+        e.msgs.push(m.short);
+      });
+    });
+    var fields = Object.keys(fieldMap).map(function (path) {
+      var e = fieldMap[path];
+      return {
+        kind: "field",
+        key: path,
+        msgs: e.msgs,
+        title: path,
+        sub: e.name + "  ·  " + e.msgs.length + (e.msgs.length === 1 ? " message" : " messages"),
+        hay: (path + " " + e.name).toLowerCase()
+      };
+    });
+
+    var codes = [];
+    Object.keys(DATA.codelists).forEach(function (id) {
+      var list = DATA.codelists[id];
+      codes.push({
+        kind: "codelist", key: id, title: id,
+        sub: list.name + "  ·  " + Object.keys(list.codes).length + " codes",
+        hay: (id + " " + list.name + " " + (list.schemaType || "")).toLowerCase()
+      });
+      Object.keys(list.codes).forEach(function (code) {
+        codes.push({
+          kind: "code", key: id + "/" + code, title: code,
+          sub: list.name + "  ·  " + list.codes[code],
+          hay: (code + " " + list.codes[code] + " " + id).toLowerCase()
+        });
+      });
+    });
+
+    return { message: messages, field: fields, code: codes };
+  }
+
+  function search(q) {
+    var needle = q.trim().toLowerCase();
+    if (needle.length < 2) return null;
+
+    function hits(rows) {
+      return rows.filter(function (r) { return r.hay.indexOf(needle) !== -1; })
+        .sort(function (a, b) {
+          // Prefix matches on the title first — searching "ChrgBr" should not
+          // bury the field under every note that mentions it.
+          var ap = a.title.toLowerCase().indexOf(needle) === 0 ? 0 : 1;
+          var bp = b.title.toLowerCase().indexOf(needle) === 0 ? 0 : 1;
+          return ap - bp || a.title.length - b.title.length;
+        })
+        .slice(0, 8);
+    }
+
+    return {
+      Messages: hits(index.message),
+      Fields: hits(index.field),
+      Codes: hits(index.code)
+    };
+  }
+
+  function renderResults(q) {
+    var box = document.getElementById("results");
+    var input = document.getElementById("search");
+    var groups = search(q);
+    box.innerHTML = "";
+
+    if (!groups) {
+      box.removeAttribute("data-open");
+      input.setAttribute("aria-expanded", "false");
+      return;
+    }
+
+    var total = 0;
+    Object.keys(groups).forEach(function (name) {
+      var rows = groups[name];
+      if (!rows.length) return;
+      total += rows.length;
+
+      var group = el("div", "results-group");
+      group.appendChild(el("span", "eyebrow", name));
+      rows.forEach(function (r) {
+        var btn = el("button", "hit");
+        btn.type = "button";
+        btn.setAttribute("role", "option");
+        btn.innerHTML = "<b>" + esc(r.title) + "</b> <em>" + esc(r.sub) + "</em>";
+        btn.addEventListener("click", function () { openHit(r); });
+        group.appendChild(btn);
+      });
+      box.appendChild(group);
+    });
+
+    if (!total) {
+      var none = el("div", "results-group");
+      none.innerHTML = '<p class="empty" style="margin:0.3rem 0 0.5rem">No match. Try a ' +
+        'field path like <code>ChrgBr</code>, a code like <code>SLEV</code>, or a ' +
+        'message like <code>pacs.008</code>.</p>';
+      box.appendChild(none);
+    }
+
+    box.setAttribute("data-open", "1");
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  function openHit(r) {
+    closeResults();
+    if (r.kind === "message") { go(r.key, "overview"); return; }
+    if (r.kind === "field") {
+      // Jump to the first message carrying this path, with the row highlighted.
+      go(r.msgs[0], "fields", r.key);
+      return;
+    }
+    // A code or codelist: open the first message with a field using it.
+    var listId = r.kind === "codelist" ? r.key : r.key.split("/")[0];
+    for (var i = 0; i < DATA.messages.length; i++) {
+      var m = DATA.messages[i];
+      for (var j = 0; j < m.fields.length; j++) {
+        if (m.fields[j].codelist === listId) {
+          go(m.short, "fields", m.fields[j].path);
+          return;
+        }
+      }
+    }
+  }
+
+  function closeResults() {
+    var box = document.getElementById("results");
+    box.removeAttribute("data-open");
+    box.innerHTML = "";
+    document.getElementById("search").setAttribute("aria-expanded", "false");
+  }
+
+  /* ---------- routing ---------- */
+
+  function go(short, tab, focusPath) {
+    state.message = byShort[short] ? short : DATA.messages[0].short;
+    state.tab = TABS.some(function (t) { return t.id === tab; }) ? tab : "overview";
+    state.changedOnly = false;
+    if (focusPath) {
+      state.hot = focusPath;
+      // A deep-linked field may be tier 3; widen the filter so it is visible.
+      var f = byShort[state.message].fields.filter(function (x) { return x.path === focusPath; })[0];
+      if (f && f.tier > state.tier) state.tier = f.tier;
+    } else {
+      state.hot = null;
+    }
+    writeHash();
+    render();
+    if (focusPath) scrollToPath(focusPath);
+  }
+
+  function scrollToPath(path) {
+    var node = document.querySelector('[data-path="' + path.replace(/"/g, '') + '"]');
+    if (node && node.scrollIntoView) {
+      node.scrollIntoView({ block: "center", behavior: "auto" });
+    }
+  }
+
+  function writeHash() {
+    // Hash routing, not paths: GitHub Pages cannot rewrite /iso20022/pacs.008
+    // back to index.html, so a path-routed deep link would 404.
+    var hash = "#" + state.message + "/" + state.tab;
+    if (state.scheme) hash += "?s=" + encodeURIComponent(state.scheme);
+    if (history.replaceState) history.replaceState(null, "", hash);
+    else location.hash = hash;
+  }
+
+  function readHash() {
+    var raw = location.hash.replace(/^#/, "");
+    if (!raw) return;
+
+    var parts = raw.split("?");
+    var query = parts[1] || "";
+    var seg = parts[0].split("/");
+
+    var scheme = /(?:^|&)s=([^&]*)/.exec(query);
+    if (scheme) {
+      var name = decodeURIComponent(scheme[1]);
+      if (DATA.schemes[name]) state.scheme = name;
+    }
+
+    if (seg[0] === "code" && seg[1]) {
+      var listId = seg[1];
+      for (var i = 0; i < DATA.messages.length; i++) {
+        var m = DATA.messages[i];
+        for (var j = 0; j < m.fields.length; j++) {
+          if (m.fields[j].codelist === listId) {
+            state.message = m.short; state.tab = "fields"; state.hot = m.fields[j].path;
+            state.tier = 3;
+            return;
+          }
+        }
+      }
+      return;
+    }
+
+    if (seg[0] === "mt" && seg[1] && DATA.mtMapping[seg[1]]) {
+      state.message = DATA.mtMapping[seg[1]].mxShort;
+      state.tab = "mt";
+      return;
+    }
+
+    if (byShort[seg[0]]) {
+      state.message = seg[0];
+      if (seg[1] && TABS.some(function (t) { return t.id === seg[1]; })) state.tab = seg[1];
+    }
+  }
+
+  /* ---------- render ---------- */
+
+  function renderPanel() {
+    var m = byShort[state.message];
+    var panel = document.getElementById("panel");
+    panel.innerHTML = "";
+    panel.setAttribute("aria-label", m.short + " " + state.tab);
+
+    if (state.tab === "overview") panel.appendChild(renderOverview(m));
+    else if (state.tab === "fields") panel.appendChild(renderFields(m));
+    else if (state.tab === "sample") panel.appendChild(renderSample(m));
+    else panel.appendChild(renderMt(m));
+  }
+
+  function render() {
+    renderSidebar();
+    renderHead();
+    renderTabs();
+    renderPanel();
+    document.title = byShort[state.message].short + " · ISO 20022 payments explorer";
+  }
+
+  /* ---------- controls ---------- */
+
+  function initScheme() {
+    var sel = document.getElementById("scheme");
+    var base = document.createElement("option");
+    base.value = ""; base.textContent = "Base ISO";
+    sel.appendChild(base);
+
+    Object.keys(DATA.schemes).forEach(function (name) {
+      var opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+
+    sel.value = state.scheme;
+    sel.addEventListener("change", function () {
+      state.scheme = sel.value;
+      state.changedOnly = false;
+      writeHash();
+      render();
+    });
+  }
+
+  function initTheme() {
+    var btn = document.getElementById("theme");
+    btn.addEventListener("click", function () {
+      var current = document.documentElement.getAttribute("data-theme");
+      if (!current) {
+        var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        current = dark ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    });
+  }
+
+  function initSearch() {
+    var input = document.getElementById("search");
+    var box = document.getElementById("results");
+
+    input.addEventListener("input", function () { renderResults(input.value); });
+    input.addEventListener("focus", function () {
+      if (input.value.trim().length >= 2) renderResults(input.value);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      var hits = box.querySelectorAll(".hit");
+      var active = box.querySelector('.hit[aria-selected="true"]');
+      var i = -1;
+      for (var k = 0; k < hits.length; k++) if (hits[k] === active) i = k;
+
+      if (e.key === "Escape") { closeResults(); input.blur(); return; }
+      if (!hits.length) return;
+
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (active) active.removeAttribute("aria-selected");
+        var next = e.key === "ArrowDown"
+          ? (i + 1) % hits.length
+          : (i <= 0 ? hits.length - 1 : i - 1);
+        hits[next].setAttribute("aria-selected", "true");
+        hits[next].scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        (active || hits[0]).click();
+        input.blur();
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!document.querySelector(".searchwrap").contains(e.target)) closeResults();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      var typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
+      if (e.key === "/" && !typing) {
+        e.preventDefault();
+        input.focus();
+        input.select();
+      }
+    });
+  }
+
+  /* ---------- boot ---------- */
+
+  readHash();
+  initScheme();
+  initTheme();
+  initSearch();
+  render();
+  if (state.hot) scrollToPath(state.hot);
+
+  window.addEventListener("hashchange", function () {
+    readHash();
+    document.getElementById("scheme").value = state.scheme;
+    render();
+  });
+
+  document.getElementById("footstats").textContent =
+    DATA.meta.messageCount + " messages · " +
+    DATA.meta.fieldCount + " fields · " +
+    Object.keys(DATA.codelists).length + " code sets (" + DATA.meta.codeCount + " codes) · " +
+    Object.keys(DATA.schemes).length + " schemes · " +
+    Object.keys(DATA.mtMapping).length + " legacy MT types mapped";
+
+  document.querySelector(".brand").addEventListener("click", function (e) {
+    e.preventDefault();
+    go(DATA.messages[0].short, "overview");
+  });
+})();
+</script>

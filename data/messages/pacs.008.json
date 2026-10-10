@@ -1,0 +1,1053 @@
+{
+  "id": "pacs.008.001.08",
+  "short": "pacs.008",
+  "name": "FIToFICustomerCreditTransfer",
+  "domain": "pacs",
+  "label": "FI to FI Customer Credit Transfer",
+  "direction": "bank → bank",
+  "mtEquivalent": [
+    "MT103"
+  ],
+  "related": [
+    "pain.001",
+    "pacs.002",
+    "pacs.004",
+    "camt.056",
+    "pacs.009"
+  ],
+  "summary": "Moves a customer credit transfer between financial institutions. This is the interbank leg of what a customer kicked off with a pain.001 — the message that actually carries the money across the correspondent or clearing chain.",
+  "whenUsed": "The workhorse of cross-border and high-value domestic payments, and the direct replacement for MT103. At least one party to the transfer is a non-financial customer; if both debtor and creditor are financial institutions you want pacs.009 instead. Sent by the debtor agent to the next agent in the chain, then forwarded agent to agent until it reaches the creditor agent. Each hop re-wraps the same transaction, so the same payment exists as several pacs.008 messages with different instructing and instructed agents but one stable UETR and End To End Id.",
+  "gotchas": [
+    "Interbank Settlement Amount is what settles between the agents; Instructed Amount is what the debtor asked to send. They differ once charges or FX are applied, and confusing them produces reconciliation breaks that only surface at month end.",
+    "ChargeBearer must agree with what the debtor actually agreed to. SHAR with an unexpected intermediary deduction is the single most common customer complaint in correspondent banking.",
+    "Unstructured address lines are being withdrawn across schemes. Writing to AdrLine instead of the structured StrtNm/TwnNm/Ctry elements is technically valid base ISO and will still be rejected by CBPR+."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Exactly one per message, describing the batch as a whole."
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Assigned by the sender and must be unique for that sender, usually per day. Receiving agents use it for duplicate detection, so never reuse one after a failed send — fix and resend with a new id. Max 35 characters."
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1,
+      "note": "When the message was created, not when the payment executes. ISO date-time with offset, e.g. 2026-10-10T09:30:47+11:00."
+    },
+    {
+      "path": "GrpHdr.NbOfTxs",
+      "name": "Number Of Transactions",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Count of CdtTrfTxInf blocks. Must match exactly — a mismatch is a hard schema-level rejection, not a warning. CBPR+ pins this to 1, one payment per message."
+    },
+    {
+      "path": "GrpHdr.CtrlSum",
+      "name": "Control Sum",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 2,
+      "note": "Sum of all instructed amounts, currency-agnostic. A checksum for the receiver, not an instruction."
+    },
+    {
+      "path": "GrpHdr.TtlIntrBkSttlmAmt",
+      "name": "Total Interbank Settlement Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 3,
+      "note": "Only meaningful when every transaction settles in the same currency."
+    },
+    {
+      "path": "GrpHdr.IntrBkSttlmDt",
+      "name": "Interbank Settlement Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 2,
+      "note": "Group-level settlement date. If present here it applies to all transactions; most implementations set it per transaction instead."
+    },
+    {
+      "path": "GrpHdr.SttlmInf",
+      "name": "Settlement Information",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "How the interbank leg settles. The chosen method constrains which other elements in this block are allowed."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.SttlmMtd",
+      "name": "Settlement Method",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "SttlmMtd",
+      "tier": 1,
+      "note": "CLRG for clearing systems, INDA/INGA for nostro/vostro accounts, COVE when a separate cover payment settles it."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.ClrSys",
+      "name": "Clearing System",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Required in practice when SettlementMethod is CLRG — names the system, e.g. TARGET2, NPP, FEDNET."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.ClrSys.Cd",
+      "name": "Clearing System Code",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "An ExternalCashClearingSystem1Code value. Distinct from the clearing-system codes used for member identifiers — same idea, different published list."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.SttlmAcct",
+      "name": "Settlement Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "The nostro or vostro account being settled across, when the method is INDA or INGA."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.InstgRmbrsmntAgt",
+      "name": "Instructing Reimbursement Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Agent through which the instructing agent reimburses, in a cover arrangement."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.InstdRmbrsmntAgt",
+      "name": "Instructed Reimbursement Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "The mirror of the above on the instructed side."
+    },
+    {
+      "path": "GrpHdr.SttlmInf.ThrdRmbrsmntAgt",
+      "name": "Third Reimbursement Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "A third institution in the reimbursement arrangement, where the two agents share no direct account relationship."
+    },
+    {
+      "path": "GrpHdr.InstgAgt",
+      "name": "Instructing Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The agent sending this particular hop. Changes at every hop — this is the element that tells you where in the chain a copy of the payment came from."
+    },
+    {
+      "path": "GrpHdr.InstdAgt",
+      "name": "Instructed Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The agent receiving this hop. Also changes per hop."
+    },
+    {
+      "path": "CdtTrfTxInf",
+      "name": "Credit Transfer Transaction Information",
+      "card": "[1..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "One block per payment. Repeating in base ISO, but most schemes — CBPR+ included — restrict it to exactly one so that a rejection cannot partially fail a batch."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId",
+      "name": "Payment Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The set of references that let this payment be tracked and matched. Four different ids with four different lifetimes — worth getting straight once."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.InstrId",
+      "name": "Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Point-to-point reference between this instructing agent and this instructed agent only. Replaced at every hop, so never use it to correlate end to end."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.EndToEndId",
+      "name": "End To End Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The debtor's own reference, carried unchanged to the creditor. This is what the creditor reconciles against. Mandatory; if the debtor supplied nothing, senders conventionally put the literal NOTPROVIDED."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.TxId",
+      "name": "Transaction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Reference assigned by the first instructing agent, intended to stay stable across the chain. In practice superseded by UETR."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.UETR",
+      "name": "UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Unique End-to-end Transaction Reference — a UUID v4 that survives every hop, return and cancellation. Optional in base ISO, mandatory under CBPR+, and the key that makes SWIFT gpi tracking work. Generate it once at origination and never alter it."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtId.ClrSysRef",
+      "name": "Clearing System Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "Reference assigned by the clearing system itself."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf",
+      "name": "Payment Type Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "How the payment should be handled: priority, scheme, instrument, purpose category."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.InstrPrty",
+      "name": "Instruction Priority",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Prty",
+      "tier": 2,
+      "note": "A hint only. Most clearing systems ignore it in favour of Service Level."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.ClrChanl",
+      "name": "Clearing Channel",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ClrChanl",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.SvcLvl",
+      "name": "Service Level",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "The rulebook the payment runs under. This is the binding scheme marker — SEPA validation starts here."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.SvcLvl.Cd",
+      "name": "Service Level Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "SvcLvl",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.LclInstrm",
+      "name": "Local Instrument",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Scheme-specific product. Read it against the relevant rulebook — the same code can mean different things in different schemes."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.LclInstrm.Cd",
+      "name": "Local Instrument Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "LclInstrm",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.CtgyPurp",
+      "name": "Category Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Why the payment is made, at a level agents may act on — can affect routing and cut-offs. Contrast with Purpose further down, which agents must leave alone."
+    },
+    {
+      "path": "CdtTrfTxInf.PmtTpInf.CtgyPurp.Cd",
+      "name": "Category Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "CtgyPurp",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.IntrBkSttlmAmt",
+      "name": "Interbank Settlement Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "The amount that actually moves between the agents, with its currency as an attribute: <IntrBkSttlmAmt Ccy=\"AUD\">1500.00</IntrBkSttlmAmt>. This is the settlement figure — not necessarily what the debtor asked to send."
+    },
+    {
+      "path": "CdtTrfTxInf.IntrBkSttlmDt",
+      "name": "Interbank Settlement Date",
+      "card": "[0..1]",
+      "type": "date",
+      "tier": 1,
+      "note": "Value date for the interbank leg. Must be a business day for the settlement currency; getting this wrong triggers a DT01 rejection."
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmPrty",
+      "name": "Settlement Priority",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Prty",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmTmIndctn",
+      "name": "Settlement Time Indication",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Reports when settlement actually occurred, debit and credit timestamps."
+    },
+    {
+      "path": "CdtTrfTxInf.SttlmTmReq",
+      "name": "Settlement Time Request",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Asks for settlement by a given time (CLSTime, TillTime, FromTime, RejectTime)."
+    },
+    {
+      "path": "CdtTrfTxInf.InstdAmt",
+      "name": "Instructed Amount",
+      "card": "[0..1]",
+      "type": "amount",
+      "tier": 1,
+      "note": "What the debtor instructed, in the original currency, before charges and FX. Present whenever it differs from the settlement amount — which is exactly when it matters."
+    },
+    {
+      "path": "CdtTrfTxInf.XchgRate",
+      "name": "Exchange Rate",
+      "card": "[0..1]",
+      "type": "rate",
+      "tier": 3,
+      "note": "The rate applied between instructed and settlement currency."
+    },
+    {
+      "path": "CdtTrfTxInf.ChrgBr",
+      "name": "Charge Bearer",
+      "card": "[1..1]",
+      "type": "code",
+      "codelist": "ChrgBr",
+      "tier": 1,
+      "note": "Who pays the fees. Mandatory. CBPR+ allows only DEBT, CRED and SHAR; SLEV is for scheme-governed payments like SEPA."
+    },
+    {
+      "path": "CdtTrfTxInf.ChrgsInf",
+      "name": "Charges Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "An audit trail of charges already taken, one entry per agent that deducted. Repeating, and it grows as the payment travels — this is how a creditor can see why less money arrived."
+    },
+    {
+      "path": "CdtTrfTxInf.ChrgsInf.Amt",
+      "name": "Charge Amount",
+      "card": "[1..1]",
+      "type": "amount",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.ChrgsInf.Agt",
+      "name": "Charging Agent",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Which agent took this charge."
+    },
+    {
+      "path": "CdtTrfTxInf.PrvsInstgAgt1",
+      "name": "Previous Instructing Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Preserves the agent chain already traversed, up to three levels."
+    },
+    {
+      "path": "CdtTrfTxInf.IntrmyAgt1",
+      "name": "Intermediary Agent 1",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Next agent after the debtor agent. Up to three intermediaries can be named, in order."
+    },
+    {
+      "path": "CdtTrfTxInf.IntrmyAgt2",
+      "name": "Intermediary Agent 2",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.IntrmyAgt3",
+      "name": "Intermediary Agent 3",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr",
+      "name": "Debtor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Whose account is debited. Mandatory as a block, but note that every element inside it is individually optional in base ISO — which is why schemes have to layer their own requirements on top."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Nm",
+      "name": "Debtor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Optional in base ISO, mandatory under every real scheme and under FATF Recommendation 16. Max 140 characters."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr",
+      "name": "Debtor Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The focus of the industry-wide structured-address migration. Use the discrete elements below rather than AdrLine."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.StrtNm",
+      "name": "Street Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.BldgNb",
+      "name": "Building Number",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.PstCd",
+      "name": "Post Code",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.TwnNm",
+      "name": "Town Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Together with Country, the minimum a hybrid address needs."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.CtrySubDvsn",
+      "name": "Country Sub Division",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "State, province or territory — e.g. VIC."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.Ctry",
+      "name": "Country",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "ISO 3166-1 alpha-2, e.g. AU. The one address element schemes almost always require."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.PstlAdr.AdrLine",
+      "name": "Address Line",
+      "card": "[0..7]",
+      "type": "text",
+      "tier": 1,
+      "note": "Free-text address lines. Still schema-valid, but being withdrawn — CBPR+ forbids it for the debtor and creditor from the November 2026 release. Treat new use as a defect."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Id",
+      "name": "Debtor Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Choice of organisation id or private-person id — exactly one, never both."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Id.OrgId",
+      "name": "Organisation Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Id.OrgId.AnyBIC",
+      "name": "Any BIC",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 2,
+      "note": "The debtor's own BIC, where it has one. Not the agent's BIC."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Id.OrgId.LEI",
+      "name": "LEI",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "20-character Legal Entity Identifier. Increasingly used for corporate payments reporting."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.Id.PrvtId",
+      "name": "Private Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3,
+      "note": "Date and place of birth, or an other-id scheme such as a passport number."
+    },
+    {
+      "path": "CdtTrfTxInf.Dbtr.CtryOfRes",
+      "name": "Country Of Residence",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct",
+      "name": "Debtor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Optional at base-ISO level because a payment can be funded without a named account; mandatory under most schemes."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "A choice: IBAN or Other. Never both."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1,
+      "note": "Mandatory in IBAN countries; must be used in preference to Other where an IBAN exists."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "For non-IBAN countries — Australian BSB plus account number, US account numbers, and so on."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct.Id.Othr.Id",
+      "name": "Other Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAcct.Ccy",
+      "name": "Account Currency",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The debtor's bank. Mandatory."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1,
+      "note": "The agent's BIC, 8 or 11 characters. Renamed from BIC in earlier versions — code written against pacs.008.001.02 will be looking for the wrong tag."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId",
+      "name": "Clearing System Member Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "How a domestic sort code, BSB or routing number travels in ISO 20022."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.ClrSysId",
+      "name": "Clearing System Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.ClrSysId.Cd",
+      "name": "Clearing System Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ClrSysId",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.ClrSysMmbId.MmbId",
+      "name": "Member Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "The actual code — e.g. 083004 for an Australian BSB."
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.Nm",
+      "name": "Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgt.FinInstnId.PstlAdr",
+      "name": "Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.DbtrAgtAcct",
+      "name": "Debtor Agent Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt",
+      "name": "Creditor Agent",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The creditor's bank."
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId",
+      "name": "Financial Institution Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId",
+      "name": "Clearing System Member Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.ClrSysId",
+      "name": "Clearing System Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.ClrSysId.Cd",
+      "name": "Clearing System Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "ClrSysId",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId",
+      "name": "Member Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "The creditor agent's domestic routing code — ABA routing number, BSB, sort code. Domestic schemes route on this rather than on BIC."
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.Nm",
+      "name": "Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgt.FinInstnId.PstlAdr",
+      "name": "Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAgtAcct",
+      "name": "Creditor Agent Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr",
+      "name": "Creditor",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Who gets paid."
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.Nm",
+      "name": "Creditor Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Optional in base ISO, required by every scheme and by sanctions screening. Max 140 characters."
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.PstlAdr",
+      "name": "Creditor Postal Address",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.PstlAdr.StrtNm",
+      "name": "Street Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.PstlAdr.TwnNm",
+      "name": "Town Name",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.PstlAdr.Ctry",
+      "name": "Country",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.PstlAdr.AdrLine",
+      "name": "Address Line",
+      "card": "[0..7]",
+      "type": "text",
+      "tier": 2,
+      "note": "Same withdrawal path as the debtor's."
+    },
+    {
+      "path": "CdtTrfTxInf.Cdtr.Id",
+      "name": "Creditor Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct",
+      "name": "Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Where the money lands."
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct.Id",
+      "name": "Account Identification",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct.Id.IBAN",
+      "name": "IBAN",
+      "card": "[0..1]",
+      "type": "iban",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct.Id.Othr",
+      "name": "Other Account Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.CdtrAcct.Id.Othr.Id",
+      "name": "Other Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "CdtTrfTxInf.UltmtDbtr",
+      "name": "Ultimate Debtor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The party the payment is ultimately on behalf of, when that differs from the account holder. Used for payment-service-provider and on-behalf-of flows; sanctions screening cares about it."
+    },
+    {
+      "path": "CdtTrfTxInf.UltmtCdtr",
+      "name": "Ultimate Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The final beneficiary when the credited account belongs to someone else, e.g. a collection agent."
+    },
+    {
+      "path": "CdtTrfTxInf.InstrForCdtrAgt",
+      "name": "Instruction For Creditor Agent",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3,
+      "note": "Coded plus free-text instructions for the creditor agent, e.g. PHOB to telephone the beneficiary. The MT 72 equivalent."
+    },
+    {
+      "path": "CdtTrfTxInf.InstrForNxtAgt",
+      "name": "Instruction For Next Agent",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.Purp",
+      "name": "Purpose",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "For the creditor's benefit. Agents must pass it through untouched and must not route on it."
+    },
+    {
+      "path": "CdtTrfTxInf.Purp.Cd",
+      "name": "Purpose Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "Purp",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.Purp.Prtry",
+      "name": "Proprietary Purpose",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "A non-ISO purpose code agreed bilaterally or domestically. Where legacy MT field 26T values land when they are not ISO external purpose codes."
+    },
+    {
+      "path": "CdtTrfTxInf.RgltryRptg",
+      "name": "Regulatory Reporting",
+      "card": "[0..10]",
+      "type": "group",
+      "tier": 3,
+      "note": "Balance-of-payments and central-bank reporting detail required by some jurisdictions."
+    },
+    {
+      "path": "CdtTrfTxInf.Tax",
+      "name": "Tax",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "CdtTrfTxInf.RltdRmtInf",
+      "name": "Related Remittance Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3,
+      "note": "Pointer to remittance detail sent separately — the link to a remt.001."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf",
+      "name": "Remittance Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "What the payment is for, so the creditor can reconcile it. Choose structured or unstructured — ISO permits both, but most schemes allow only one."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Ustrd",
+      "name": "Unstructured Remittance Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1,
+      "note": "Free text, 140 characters per occurrence. Repeating in base ISO, but CBPR+ and SEPA both cap it at a single occurrence — so assuming you can send 4 x 140 characters is a portability trap."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Strd",
+      "name": "Structured Remittance Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "Machine-readable invoice and reference detail. Far better for automated reconciliation, far less widely supported."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Strd.RfrdDocInf",
+      "name": "Referred Document Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "Invoice type, number and date."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Strd.RfrdDocAmt",
+      "name": "Referred Document Amount",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Due amount, discounts, credit notes and the remitted amount."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Strd.CdtrRefInf",
+      "name": "Creditor Reference Information",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "A structured reference issued by the creditor — e.g. an ISO 11649 RF reference or a Swiss QR reference."
+    },
+    {
+      "path": "CdtTrfTxInf.RmtInf.Strd.CdtrRefInf.Ref",
+      "name": "Creditor Reference",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "CdtTrfTxInf.SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3,
+      "note": "The standard's official escape hatch for scheme-specific extensions. Anything here is by definition non-portable."
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08\">",
+    "  <FIToFICstmrCdtTrf>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKAAU3MX20261010000199</MsgId>",
+    "      <CreDtTm>2026-10-10T09:30:47+11:00</CreDtTm>",
+    "      <NbOfTxs>1</NbOfTxs>",
+    "      <SttlmInf>",
+    "        <SttlmMtd>CLRG</SttlmMtd>",
+    "        <ClrSys>",
+    "          <Cd>RTGS</Cd>",
+    "        </ClrSys>",
+    "      </SttlmInf>",
+    "    </GrpHdr>",
+    "    <CdtTrfTxInf>",
+    "      <PmtId>",
+    "        <InstrId>BNKAAU3MX0001</InstrId>",
+    "        <EndToEndId>INV-2026-4471</EndToEndId>",
+    "        <UETR>7a9c1e42-3b6d-4f8a-9c21-5e7d0a3b9f14</UETR>",
+    "      </PmtId>",
+    "      <PmtTpInf>",
+    "        <SvcLvl>",
+    "          <Cd>SDVA</Cd>",
+    "        </SvcLvl>",
+    "      </PmtTpInf>",
+    "      <IntrBkSttlmAmt Ccy=\"AUD\">15750.00</IntrBkSttlmAmt>",
+    "      <IntrBkSttlmDt>2026-10-10</IntrBkSttlmDt>",
+    "      <ChrgBr>SHAR</ChrgBr>",
+    "      <Dbtr>",
+    "        <Nm>Thornbury Joinery Pty Ltd</Nm>",
+    "        <PstlAdr>",
+    "          <StrtNm>High Street</StrtNm>",
+    "          <BldgNb>412</BldgNb>",
+    "          <PstCd>3071</PstCd>",
+    "          <TwnNm>Thornbury</TwnNm>",
+    "          <CtrySubDvsn>VIC</CtrySubDvsn>",
+    "          <Ctry>AU</Ctry>",
+    "        </PstlAdr>",
+    "      </Dbtr>",
+    "      <DbtrAcct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>083004123456789</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "      </DbtrAcct>",
+    "      <DbtrAgt>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKAAU3MXXX</BICFI>",
+    "          <ClrSysMmbId>",
+    "            <ClrSysId>",
+    "              <Cd>AUBSB</Cd>",
+    "            </ClrSysId>",
+    "            <MmbId>083004</MmbId>",
+    "          </ClrSysMmbId>",
+    "        </FinInstnId>",
+    "      </DbtrAgt>",
+    "      <CdtrAgt>",
+    "        <FinInstnId>",
+    "          <BICFI>BNKBAU2SXXX</BICFI>",
+    "        </FinInstnId>",
+    "      </CdtrAgt>",
+    "      <Cdtr>",
+    "        <Nm>Riverina Timber Supplies</Nm>",
+    "        <PstlAdr>",
+    "          <StrtNm>Kooringal Road</StrtNm>",
+    "          <TwnNm>Wagga Wagga</TwnNm>",
+    "          <CtrySubDvsn>NSW</CtrySubDvsn>",
+    "          <Ctry>AU</Ctry>",
+    "        </PstlAdr>",
+    "      </Cdtr>",
+    "      <CdtrAcct>",
+    "        <Id>",
+    "          <Othr>",
+    "            <Id>650000987654321</Id>",
+    "          </Othr>",
+    "        </Id>",
+    "      </CdtrAcct>",
+    "      <Purp>",
+    "        <Cd>SUPP</Cd>",
+    "      </Purp>",
+    "      <RmtInf>",
+    "        <Ustrd>Invoice INV-2026-4471 hardwood order</Ustrd>",
+    "      </RmtInf>",
+    "    </CdtTrfTxInf>",
+    "  </FIToFICstmrCdtTrf>",
+    "</Document>"
+  ]
+}

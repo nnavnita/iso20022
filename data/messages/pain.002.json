@@ -1,0 +1,360 @@
+{
+  "id": "pain.002.001.10",
+  "short": "pain.002",
+  "name": "CustomerPaymentStatusReport",
+  "domain": "pain",
+  "label": "Customer Payment Status Report",
+  "direction": "bank → customer",
+  "mtEquivalent": [],
+  "related": [
+    "pain.001",
+    "pain.008",
+    "pacs.002",
+    "camt.053"
+  ],
+  "summary": "The bank telling its customer what happened to a file it submitted — accepted, partly accepted, or rejected, and why.",
+  "whenUsed": "Sent in response to a pain.001 or pain.008. Usually more than once: a quick technical acknowledgement that the file parsed, then a business-validation report, then per-payment outcomes as they settle. Treating the first one as final is the classic integration mistake.",
+  "gotchas": [
+    "Status appears at three levels — group, payment-information, and transaction — and you must read all three. A group status of PART means some payments failed; the detail is only in the transaction blocks.",
+    "ACTC means the file was syntactically valid. Nothing more. Money has not moved, limits have not been checked, and beneficiaries have not been validated.",
+    "Matching relies on you having populated InstrId and EndToEndId in the original pain.001. Files sent without them produce status reports that cannot be reconciled to anything."
+  ],
+  "fields": [
+    {
+      "path": "GrpHdr",
+      "name": "Group Header",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.MsgId",
+      "name": "Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The status report's own id."
+    },
+    {
+      "path": "GrpHdr.CreDtTm",
+      "name": "Creation Date Time",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1
+    },
+    {
+      "path": "GrpHdr.InitgPty",
+      "name": "Initiating Party",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "GrpHdr.DbtrAgt",
+      "name": "Debtor Agent",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "The bank issuing the report."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts",
+      "name": "Original Group Information And Status",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "Mandatory here, unlike in pacs.002 — a customer status report always names the file it is about."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.OrgnlMsgId",
+      "name": "Original Message Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Echoes your pain.001 GrpHdr.MsgId."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.OrgnlMsgNmId",
+      "name": "Original Message Name Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "e.g. pain.001.001.09."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.OrgnlCreDtTm",
+      "name": "Original Creation Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.OrgnlNbOfTxs",
+      "name": "Original Number Of Transactions",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Useful as a sanity check that the bank received the whole file."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.OrgnlCtrlSum",
+      "name": "Original Control Sum",
+      "card": "[0..1]",
+      "type": "decimal",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.GrpSts",
+      "name": "Group Status",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "TxSts",
+      "tier": 1,
+      "note": "File-level verdict. RJCT here means nothing in the file will be processed."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.StsRsnInf",
+      "name": "Status Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.StsRsnInf.Rsn",
+      "name": "Reason",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.StsRsnInf.Rsn.Cd",
+      "name": "Reason Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "StsRsn",
+      "tier": 1,
+      "note": "FF01 at group level almost always means the file itself is malformed."
+    },
+    {
+      "path": "OrgnlGrpInfAndSts.StsRsnInf.AddtlInf",
+      "name": "Additional Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1,
+      "note": "Where banks put the human-readable detail. Log it — it is often the only thing that explains an obscure code."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts",
+      "name": "Original Payment Information And Status",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Per-batch outcomes, mirroring your PmtInf blocks."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.OrgnlPmtInfId",
+      "name": "Original Payment Information Identification",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Echoes your PmtInfId."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.OrgnlNbOfTxs",
+      "name": "Original Number Of Transactions",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.PmtInfSts",
+      "name": "Payment Information Status",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "TxSts",
+      "tier": 1,
+      "note": "Batch-level verdict. PART means read the transactions below."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.StsRsnInf",
+      "name": "Status Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts",
+      "name": "Transaction Information And Status",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1,
+      "note": "Per-payment outcomes. Where the actionable detail lives."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.StsId",
+      "name": "Status Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlInstrId",
+      "name": "Original Instruction Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Your own per-row reference from the pain.001. The key you should be matching on."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlEndToEndId",
+      "name": "Original End To End Identification",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlUETR",
+      "name": "Original UETR",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "Present once the bank has assigned one and can tell you how to track the payment onward."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.TxSts",
+      "name": "Transaction Status",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "TxSts",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf",
+      "name": "Status Reason Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf.Rsn",
+      "name": "Reason",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf.Rsn.Cd",
+      "name": "Reason Code",
+      "card": "[0..1]",
+      "type": "code",
+      "codelist": "StsRsn",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf.AddtlInf",
+      "name": "Additional Information",
+      "card": "[0..n]",
+      "type": "text",
+      "tier": 1
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.AccptncDtTm",
+      "name": "Acceptance Date Time",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.ChrgsInf",
+      "name": "Charges Information",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlTxRef",
+      "name": "Original Transaction Reference",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Copy of the payment as the bank understood it. Comparing it against what you sent is the fastest way to find a mapping bug."
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlTxRef.Amt",
+      "name": "Original Amount",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlTxRef.Cdtr",
+      "name": "Original Creditor",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "OrgnlPmtInfAndSts.TxInfAndSts.OrgnlTxRef.CdtrAcct",
+      "name": "Original Creditor Account",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2
+    },
+    {
+      "path": "SplmtryData",
+      "name": "Supplementary Data",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 3
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pain.002.001.10\">",
+    "  <CstmrPmtStsRpt>",
+    "    <GrpHdr>",
+    "      <MsgId>BNKA-STS-20261010-7781</MsgId>",
+    "      <CreDtTm>2026-10-10T08:14:22+11:00</CreDtTm>",
+    "    </GrpHdr>",
+    "    <OrgnlGrpInfAndSts>",
+    "      <OrgnlMsgId>THORN-PAY-20261010-01</OrgnlMsgId>",
+    "      <OrgnlMsgNmId>pain.001.001.09</OrgnlMsgNmId>",
+    "      <OrgnlCreDtTm>2026-10-10T08:12:00+11:00</OrgnlCreDtTm>",
+    "      <OrgnlNbOfTxs>2</OrgnlNbOfTxs>",
+    "      <OrgnlCtrlSum>18250.00</OrgnlCtrlSum>",
+    "      <GrpSts>PART</GrpSts>",
+    "    </OrgnlGrpInfAndSts>",
+    "    <OrgnlPmtInfAndSts>",
+    "      <OrgnlPmtInfId>THORN-BATCH-001</OrgnlPmtInfId>",
+    "      <OrgnlNbOfTxs>2</OrgnlNbOfTxs>",
+    "      <PmtInfSts>PART</PmtInfSts>",
+    "      <TxInfAndSts>",
+    "        <OrgnlInstrId>ROW-0001</OrgnlInstrId>",
+    "        <OrgnlEndToEndId>INV-2026-4471</OrgnlEndToEndId>",
+    "        <TxSts>ACTC</TxSts>",
+    "      </TxInfAndSts>",
+    "      <TxInfAndSts>",
+    "        <OrgnlInstrId>ROW-0002</OrgnlInstrId>",
+    "        <OrgnlEndToEndId>INV-2026-4472</OrgnlEndToEndId>",
+    "        <TxSts>RJCT</TxSts>",
+    "        <StsRsnInf>",
+    "          <Rsn>",
+    "            <Cd>AC01</Cd>",
+    "          </Rsn>",
+    "          <AddtlInf>Account number failed BSB checksum validation</AddtlInf>",
+    "        </StsRsnInf>",
+    "        <OrgnlTxRef>",
+    "          <Amt>",
+    "            <InstdAmt Ccy=\"AUD\">2500.00</InstdAmt>",
+    "          </Amt>",
+    "          <Cdtr>",
+    "            <Nm>Preston Fixings Co</Nm>",
+    "          </Cdtr>",
+    "        </OrgnlTxRef>",
+    "      </TxInfAndSts>",
+    "    </OrgnlPmtInfAndSts>",
+    "  </CstmrPmtStsRpt>",
+    "</Document>"
+  ],
+  "mtNote": "No true MT equivalent: corporate status reporting was proprietary per-bank ACK files, not an MT message type."
+}

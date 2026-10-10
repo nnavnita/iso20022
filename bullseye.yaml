@@ -1,0 +1,57 @@
+# Targets for the ISO 20022 explorer. Desired states, expressed as testable
+# properties. See https://github.com/marcelocantos/bullseye
+version: 1
+project: iso20022
+
+targets:
+  - id: data-model
+    title: Data layer holds the payments core as validated JSON
+    state: achieved
+    property: >
+      data/messages/ has one file per covered message; build.py exits non-zero
+      on any message missing id, name, domain, direction, summary or fields;
+      tests/test_data.py passes.
+
+  - id: build-pipeline
+    title: A single stdlib command produces a self-contained page
+    state: achieved
+    property: >
+      `python3 build.py` writes dist/index.html with data inlined; the file
+      opens over file:// with no server and no network requests.
+
+  - id: explorer-ui
+    title: Each message is explorable four ways
+    state: achieved
+    property: >
+      Selecting a message shows Overview, Fields, Sample XML and MT/MX tabs;
+      the scheme selector annotates field rows across every message; global
+      search returns grouped message, field and code hits.
+
+  - id: published
+    title: The page is live on the personal domain
+    state: achieved
+    property: >
+      https://nnavnita.com/iso20022/ returns 200 and renders the explorer;
+      pushes to main redeploy it; CI fails if committed dist/ is stale.
+
+  - id: securities-domain
+    title: Coverage extends beyond payments to securities
+    state: open
+    property: >
+      sese, semt, setr and seev messages appear in the sidebar with the same
+      four tabs; the domain grouping still fits on one screen.
+
+  - id: xsd-import
+    title: Field coverage is exhaustive, not curated
+    state: open
+    property: >
+      A script parses ISO 20022 XSDs into data/messages/ as tier-3 entries;
+      every element in the schema is present; the default view stays readable
+      because tiers 1-2 are unchanged. ISO redistribution terms reviewed first.
+
+  - id: validator
+    title: Paste a message, get it checked
+    state: open
+    property: >
+      Pasting an XML document into the page reports which fields are present,
+      missing-but-mandatory, or forbidden under the selected scheme.

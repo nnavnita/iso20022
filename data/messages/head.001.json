@@ -1,0 +1,211 @@
+{
+  "id": "head.001.001.02",
+  "short": "head.001",
+  "name": "BusinessApplicationHeader",
+  "domain": "head",
+  "label": "Business Application Header",
+  "direction": "any → any",
+  "mtEquivalent": [],
+  "related": [
+    "pacs.008",
+    "pacs.009",
+    "camt.056",
+    "pacs.002"
+  ],
+  "summary": "The envelope that wraps any ISO 20022 business message: who sent it, who it is for, what it is, and when. The structured replacement for the MT message's header blocks.",
+  "whenUsed": "Prepended to the business message in most real networks — CBPR+ requires it on every message, and TARGET2 and many market infrastructures do too. Carries the routing and identity information that the business payload deliberately leaves out, which is what lets the same pacs.008 be relayed, copied or archived without rewriting it.",
+  "gotchas": [
+    "The header's From and To are the messaging parties — the institutions exchanging this hop. They are not the debtor and creditor agents, and they are not necessarily even in the payment chain. Routing on the business payload's agents rather than the header is a common integration error.",
+    "Duplicate detection usually keys on the header's BizMsgIdr, not on the payload's GrpHdr.MsgId. Two different ids with two different uniqueness rules, and conflating them causes either false duplicates or missed ones.",
+    "MsgDefIdr must exactly match the payload's namespace version. A header saying pacs.008.001.08 around a pacs.008.001.09 document will be rejected at the gateway, before any business validation runs."
+  ],
+  "fields": [
+    {
+      "path": "CharSet",
+      "name": "Character Set",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "Rarely used; UTF-8 is assumed in practice."
+    },
+    {
+      "path": "Fr",
+      "name": "From",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The sending messaging party for this hop."
+    },
+    {
+      "path": "Fr.FIId",
+      "name": "Financial Institution Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Fr.FIId.FinInstnId",
+      "name": "Financial Institution Identification Detail",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "Fr.FIId.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1,
+      "note": "Sender's BIC. Under CBPR+ this must be the 11-character form."
+    },
+    {
+      "path": "Fr.OrgId",
+      "name": "Organisation Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "For non-FI senders, such as a corporate connecting directly."
+    },
+    {
+      "path": "To",
+      "name": "To",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1,
+      "note": "The receiving messaging party for this hop."
+    },
+    {
+      "path": "To.FIId",
+      "name": "Financial Institution Identification",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "To.FIId.FinInstnId",
+      "name": "Financial Institution Identification Detail",
+      "card": "[1..1]",
+      "type": "group",
+      "tier": 1
+    },
+    {
+      "path": "To.FIId.FinInstnId.BICFI",
+      "name": "BICFI",
+      "card": "[0..1]",
+      "type": "bic",
+      "tier": 1
+    },
+    {
+      "path": "BizMsgIdr",
+      "name": "Business Message Identifier",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Unique identifier for this message as a message. The network's duplicate-detection key. Max 35 characters."
+    },
+    {
+      "path": "MsgDefIdr",
+      "name": "Message Definition Identifier",
+      "card": "[1..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "The exact payload type and version, e.g. pacs.008.001.08. Must agree with the payload's namespace."
+    },
+    {
+      "path": "BizSvc",
+      "name": "Business Service",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 1,
+      "note": "Which service or rulebook governs this exchange — CBPR+ uses values such as swift.cbprplus.02. Gateways route and validate on this, so a wrong value fails fast."
+    },
+    {
+      "path": "MktPrctc",
+      "name": "Market Practice",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Reference to the registered market practice being followed. Introduced to make the applicable usage guideline explicit rather than assumed."
+    },
+    {
+      "path": "CreDt",
+      "name": "Creation Date",
+      "card": "[1..1]",
+      "type": "datetime",
+      "tier": 1,
+      "note": "When the header was created. Distinct from the payload's own creation timestamp, and the two can legitimately differ."
+    },
+    {
+      "path": "BizPrcgDt",
+      "name": "Business Processing Date",
+      "card": "[0..1]",
+      "type": "datetime",
+      "tier": 3
+    },
+    {
+      "path": "CpyDplct",
+      "name": "Copy Duplicate",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 2,
+      "note": "CODU for a copy-duplicate, COPY for a copy, DUPL for a duplicate. This is how a resent or regulator-copied message is marked — processing a DUPL as though it were original is a double-payment risk."
+    },
+    {
+      "path": "PssblDplct",
+      "name": "Possible Duplicate",
+      "card": "[0..1]",
+      "type": "indicator",
+      "tier": 2,
+      "note": "True when the sender is unsure whether the original got through, typically after a connectivity failure. Requires the receiver to check before processing."
+    },
+    {
+      "path": "Prty",
+      "name": "Priority",
+      "card": "[0..1]",
+      "type": "text",
+      "tier": 3,
+      "note": "Network-level priority, separate from any priority in the payload."
+    },
+    {
+      "path": "Sgntr",
+      "name": "Signature",
+      "card": "[0..1]",
+      "type": "group",
+      "tier": 2,
+      "note": "Holds an XML digital signature over the message. Used where non-repudiation is required at the application layer rather than only in transport."
+    },
+    {
+      "path": "Rltd",
+      "name": "Related",
+      "card": "[0..n]",
+      "type": "group",
+      "tier": 2,
+      "note": "A nested header pointing at the message this one responds to — how a pacs.002 is tied to the pacs.008 it answers at the envelope level."
+    }
+  ],
+  "sample": [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<AppHdr xmlns=\"urn:iso:std:iso:20022:tech:xsd:head.001.001.02\">",
+    "  <Fr>",
+    "    <FIId>",
+    "      <FinInstnId>",
+    "        <BICFI>BNKAAU3MXXX</BICFI>",
+    "      </FinInstnId>",
+    "    </FIId>",
+    "  </Fr>",
+    "  <To>",
+    "    <FIId>",
+    "      <FinInstnId>",
+    "        <BICFI>BNKBAU2SXXX</BICFI>",
+    "      </FinInstnId>",
+    "    </FIId>",
+    "  </To>",
+    "  <BizMsgIdr>BNKAAU3MX20261010000199</BizMsgIdr>",
+    "  <MsgDefIdr>pacs.008.001.08</MsgDefIdr>",
+    "  <BizSvc>swift.cbprplus.02</BizSvc>",
+    "  <CreDt>2026-10-10T09:30:47+11:00</CreDt>",
+    "  <PssblDplct>false</PssblDplct>",
+    "</AppHdr>"
+  ],
+  "mtNote": "No true MT equivalent: MT blocks 1 and 2 are network header blocks, not message types."
+}

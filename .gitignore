@@ -1,0 +1,5 @@
+# Brainstorming / planning docs stay local
+docs/superpowers/
+.DS_Store
+__pycache__/
+*.pyc
